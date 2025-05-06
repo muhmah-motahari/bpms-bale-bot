@@ -34,7 +34,7 @@ var (
 	processExecutionService = service.NewProcessExecutionService(processRepo, taskRepo, groupRepo)
 
 	// Initialize handlers
-	processHandler = handlers.NewProcessHandler(processService, processBuilderService, processExecutionService)
+	processHandler = handlers.NewProcessHandler(processService, processBuilderService, processExecutionService, taskService)
 	taskHandler    = handlers.NewTaskHandler(taskService, taskBuilderService, processService, groupService)
 	groupHandler   = handlers.NewGroupHandler(groupService, userService)
 )

@@ -2,6 +2,7 @@ package service
 
 import (
 	"bbb/internal/models"
+	"fmt"
 	"sync"
 )
 
@@ -53,6 +54,7 @@ func (s *ProcessBuilderService) SetProcessDescription(userID int64, description 
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	fmt.Println("SetProcessDescription", userID, description)
 	if builder, exists := s.builders[userID]; exists && builder.CurrentStep == "description" {
 		builder.Process.Description = description
 		return true

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bbb/internal/models"
 	service "bbb/internal/services"
 	"fmt"
 	"strconv"
@@ -13,17 +14,20 @@ type ProcessHandler struct {
 	processService        service.ProcessService
 	processBuilderService *service.ProcessBuilderService
 	processExecService    service.ProcessExecutionService
+	taskService           service.TaskService
 }
 
 func NewProcessHandler(
 	processService service.ProcessService,
 	processBuilderService *service.ProcessBuilderService,
 	processExecService service.ProcessExecutionService,
+	taskService service.TaskService,
 ) *ProcessHandler {
 	return &ProcessHandler{
 		processService:        processService,
 		processBuilderService: processBuilderService,
 		processExecService:    processExecService,
+		taskService:           taskService,
 	}
 }
 
@@ -69,9 +73,10 @@ func (h *ProcessHandler) HandleProcessCreation(bot *tgbotapi.BotAPI, update tgbo
 
 func (h *ProcessHandler) HandleProcessExecution(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 	chatID := update.Message.Chat.ID
+	userID := update.Message.From.ID
 
 	if update.Message.Text == "شروع فرایند" {
-		if processes, err := h.processService.GetProcessesByUserID(update.Message.From.ID); err == nil {
+		if processes, err := h.processService.GetProcessesByUserID(userID); err == nil {
 			var keyboardRows [][]tgbotapi.InlineKeyboardButton
 			for _, process := range processes {
 				row := []tgbotapi.InlineKeyboardButton{
@@ -90,33 +95,6 @@ func (h *ProcessHandler) HandleProcessExecution(bot *tgbotapi.BotAPI, update tgb
 		return
 	}
 
-	if update.Message.Text == "تکمیل وظیفه" {
-		var keyboardRows [][]tgbotapi.InlineKeyboardButton
-		runningProcesses := h.processExecService.GetRunningProcessesByUserID(update.Message.From.ID)
-		for processID := range runningProcesses {
-			process, err := h.processService.GetProcessByID(processID)
-			if err != nil {
-				continue
-			}
-			row := []tgbotapi.InlineKeyboardButton{
-				tgbotapi.NewInlineKeyboardButtonData(
-					process.Name,
-					fmt.Sprintf("complete_task_%d", processID),
-				),
-			}
-			keyboardRows = append(keyboardRows, row)
-		}
-		if len(keyboardRows) == 0 {
-			msg := tgbotapi.NewMessage(chatID, "هیچ فرایندی در حال اجرا نیست.")
-			bot.Send(msg)
-			return
-		}
-		keyboard := tgbotapi.NewInlineKeyboardMarkup(keyboardRows...)
-		msg := tgbotapi.NewMessage(chatID, "لطفا فرایند را انتخاب کنید:")
-		msg.ReplyMarkup = keyboard
-		bot.Send(msg)
-		return
-	}
 }
 
 func (h *ProcessHandler) HandleProcessCallback(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
@@ -129,22 +107,47 @@ func (h *ProcessHandler) HandleProcessCallback(bot *tgbotapi.BotAPI, update tgbo
 
 	if strings.HasPrefix(data, "start_process_") {
 		processID, _ := strconv.ParseUint(strings.TrimPrefix(data, "start_process_"), 10, 32)
-		if err := h.processExecService.StartProcess(uint(processID)); err != nil {
+
+		// Start a new process execution
+		execution, err := h.processService.StartProcessExecution(uint(processID))
+		if err != nil {
 			msg := tgbotapi.NewMessage(chatID, "خطا در شروع فرایند. لطفا دوباره تلاش کنید.")
 			bot.Send(msg)
 			return
 		}
 
-		currentTask, err := h.processExecService.GetCurrentTask(uint(processID))
-		if err != nil {
-			msg := tgbotapi.NewMessage(chatID, "خطا در دریافت وظیفه فعلی. لطفا دوباره تلاش کنید.")
+		// Get the first task
+		tasks, err := h.taskService.GetTasksByProcessID(uint(processID))
+		var firstTasks []models.Task
+		for _, task := range tasks {
+			preTasks, _ := h.taskService.GetTaskPrerequisites(task.ID)
+			if len(preTasks) == 0 {
+				firstTasks = append(firstTasks, task)
+			}
+		}
+		if err != nil || len(firstTasks) == 0 {
+			msg := tgbotapi.NewMessage(chatID, "خطا در دریافت وظایف فرایند.")
 			bot.Send(msg)
 			return
 		}
 
-		msg := tgbotapi.NewMessage(chatID,
-			fmt.Sprintf("فرایند با موفقیت شروع شد!\nوظیفه فعلی: %s\nتوضیحات: %s",
-				currentTask.Title, currentTask.Description))
+		// Add the first task to pending tasks
+		for _, task := range firstTasks {
+			if err := h.processService.AddPendingTask(execution.ID, task.ID); err != nil {
+				msg := tgbotapi.NewMessage(chatID, "خطا در شروع وظیفه اول.")
+				bot.Send(msg)
+				return
+			}
+		}
+
+		// Create message with all initial tasks
+		var tasksInfo strings.Builder
+		tasksInfo.WriteString(fmt.Sprintf("فرایند با موفقیت شروع شد!\nشناسه اجرا: %d\n\nوظایف اولیه:\n", execution.ID))
+		for i, task := range firstTasks {
+			tasksInfo.WriteString(fmt.Sprintf("%d. %s\n   توضیحات: %s\n", i+1, task.Title, task.Description))
+		}
+
+		msg := tgbotapi.NewMessage(chatID, tasksInfo.String())
 		bot.Send(msg)
 	}
 }

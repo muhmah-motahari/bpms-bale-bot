@@ -12,6 +12,11 @@ type (
 		GetAll() ([]models.Process, error)
 		GetByID(processID uint) (*models.Process, error)
 		GetByUserID(userID int64) ([]models.Process, error)
+		SaveProcessExecution(execution *models.ProcessExecution) error
+		GetProcessExecutionByID(id uint) (*models.ProcessExecution, error)
+		GetProcessExecutionsByProcessID(processID uint) ([]models.ProcessExecution, error)
+		UpdateProcessExecution(execution *models.ProcessExecution) error
+		GetPendingProcessExecutions() ([]models.ProcessExecution, error)
 	}
 
 	processRepository struct {
@@ -59,4 +64,36 @@ func (r *processRepository) GetByUserID(userID int64) ([]models.Process, error) 
 	var processes []models.Process
 	err := r.db.Where("user_id = ?", userID).Find(&processes).Error
 	return processes, err
+}
+
+func (r *processRepository) SaveProcessExecution(execution *models.ProcessExecution) error {
+	return r.db.Create(execution).Error
+}
+
+func (r *processRepository) GetProcessExecutionByID(id uint) (*models.ProcessExecution, error) {
+	var execution models.ProcessExecution
+	if err := r.db.First(&execution, id).Error; err != nil {
+		return nil, err
+	}
+	return &execution, nil
+}
+
+func (r *processRepository) GetProcessExecutionsByProcessID(processID uint) ([]models.ProcessExecution, error) {
+	var executions []models.ProcessExecution
+	if err := r.db.Where("process_id = ?", processID).Find(&executions).Error; err != nil {
+		return nil, err
+	}
+	return executions, nil
+}
+
+func (r *processRepository) UpdateProcessExecution(execution *models.ProcessExecution) error {
+	return r.db.Save(execution).Error
+}
+
+func (r *processRepository) GetPendingProcessExecutions() ([]models.ProcessExecution, error) {
+	var executions []models.ProcessExecution
+	if err := r.db.Where("status = ?", models.ProcessExecutionStatusPending).Find(&executions).Error; err != nil {
+		return nil, err
+	}
+	return executions, nil
 }

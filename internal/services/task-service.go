@@ -17,6 +17,7 @@ type (
 		GetUserTasks(userID int64) ([]models.Task, error)
 		GetNextAvailableTasks(processID uint) ([]models.Task, error)
 		AddPrerequisite(taskID uint, prerequisiteID uint) error
+		GetTaskPrerequisites(taskID uint) ([]uint, error)
 	}
 
 	taskService struct {
@@ -92,4 +93,8 @@ func (s *taskService) GetNextAvailableTasks(processID uint) ([]models.Task, erro
 
 func (s *taskService) AddPrerequisite(taskID uint, prerequisiteID uint) error {
 	return s.repo.AddPrerequisite(taskID, prerequisiteID)
+}
+
+func (s *taskService) GetTaskPrerequisites(taskID uint) ([]uint, error) {
+	return s.repo.GetPrerequisites(taskID)
 }
