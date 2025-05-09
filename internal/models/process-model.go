@@ -20,11 +20,18 @@ type (
 		ProcessID      uint                   `gorm:"index" json:"process_id"`
 		Process        *Process               `json:"process"`
 		Status         ProcessExecutionStatus `gorm:"type:varchar(50);default:'pending'" json:"status"`
-		PendingTaskIDs []uint                 `gorm:"type:integer[]" json:"pending_task_ids"`
+		PendingTaskIDs []uint                 `gorm:"-" json:"pending_task_ids"`
 		StartedAt      time.Time              `gorm:"autoCreateTime" json:"started_at"`
 		CompletedAt    *time.Time             `json:"completed_at"`
 		CreatedAt      time.Time              `gorm:"autoCreateTime" json:"created_at"`
 		UpdatedAt      time.Time              `gorm:"autoUpdateTime" json:"updated_at"`
+	}
+
+	// PendingTask represents a pending task in a process execution
+	PendingTask struct {
+		ProcessExecutionID uint      `gorm:"primaryKey;index" json:"process_execution_id"`
+		TaskID             uint      `gorm:"primaryKey;index" json:"task_id"`
+		CreatedAt          time.Time `gorm:"autoCreateTime" json:"created_at"`
 	}
 
 	ProcessBuilder struct {

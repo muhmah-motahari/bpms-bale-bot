@@ -105,6 +105,18 @@ func (s *TaskBuilderService) SetGroup(userID int64, groupID uint) bool {
 
 	if builder, exists := s.builders[userID]; exists && builder.CurrentStep == "group" {
 		builder.Task.GroupID = &groupID
+		builder.CurrentStep = "is_final"
+		return true
+	}
+	return false
+}
+
+func (s *TaskBuilderService) SetIsFinal(userID int64, isFinal bool) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if builder, exists := s.builders[userID]; exists && builder.CurrentStep == "is_final" {
+		builder.Task.IsFinal = isFinal
 		return true
 	}
 	return false

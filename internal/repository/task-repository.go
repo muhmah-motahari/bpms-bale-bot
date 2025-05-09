@@ -13,8 +13,11 @@ type (
 		GetByID(taskID uint) (*models.Task, error)
 		GetPrerequisites(taskID uint) ([]uint, error)
 		AddPrerequisite(taskID uint, prerequisiteID uint) error
-		GetByAssigneeID(assigneeID int64) ([]models.Task, error)
-		GetNextAvailableTasks(processID uint) ([]models.Task, error)
+		StartTaskExecution(taskID uint) error
+		GetTaskExecutionsByTaskID(taskID uint) ([]models.TaskExecution, error)
+		GetTaskExecutionByID(taskExecutionID uint) (*models.TaskExecution, error)
+		GetTaskExecutionsByUserID(userID int64) ([]models.TaskExecution, error)
+		UpdateTaskExecution(taskExecution *models.TaskExecution) error
 	}
 
 	taskRepository struct {
@@ -78,16 +81,37 @@ func (r *taskRepository) AddPrerequisite(taskID uint, prerequisiteID uint) error
 	return r.db.Create(&prerequisite).Error
 }
 
-func (r *taskRepository) GetByAssigneeID(assigneeID int64) ([]models.Task, error) {
-	var tasks []models.Task
-	if err := r.db.Where("assignee_id = ?", assigneeID).Find(&tasks).Error; err != nil {
-		return nil, err
-	}
-	return tasks, nil
+func (r *taskRepository) StartTaskExecution(taskID uint) error {
+	return r.db.Create(&models.TaskExecution{
+		TaskID: taskID,
+		Status: models.TaskStatusPending,
+	}).Error
 }
 
-func (r *taskRepository) GetNextAvailableTasks(processID uint) ([]models.Task, error) {
-	var tasks []models.Task
-	err := r.db.Where("process_id = ? AND status = ?", processID, models.TaskStatusPending).Find(&tasks).Error
-	return tasks, err
+func (r *taskRepository) GetTaskExecutionsByTaskID(taskID uint) ([]models.TaskExecution, error) {
+	var taskExecutions []models.TaskExecution
+	if err := r.db.Where("task_id = ?", taskID).Find(&taskExecutions).Error; err != nil {
+		return nil, err
+	}
+	return taskExecutions, nil
+}
+
+func (r *taskRepository) GetTaskExecutionByID(taskExecutionID uint) (*models.TaskExecution, error) {
+	var taskExecution models.TaskExecution
+	if err := r.db.First(&taskExecution, taskExecutionID).Error; err != nil {
+		return nil, err
+	}
+	return &taskExecution, nil
+}
+
+func (r *taskRepository) GetTaskExecutionsByUserID(userID int64) ([]models.TaskExecution, error) {
+	var taskExecutions []models.TaskExecution
+	if err := r.db.Where("user_id = ?", userID).Find(&taskExecutions).Error; err != nil {
+		return nil, err
+	}
+	return taskExecutions, nil
+}
+
+func (r *taskRepository) UpdateTaskExecution(taskExecution *models.TaskExecution) error {
+	return r.db.Model(&models.TaskExecution{}).Where("id = ?", taskExecution.ID).Updates(taskExecution).Error
 }

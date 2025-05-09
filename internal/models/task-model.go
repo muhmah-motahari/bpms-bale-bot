@@ -8,17 +8,25 @@ import (
 )
 
 type Task struct {
+	ID          uint      `gorm:"primaryKey;autoIncrement" json:"id"`
+	Title       string    `gorm:"type:varchar(100);not null" json:"title"`
+	Description string    `gorm:"type:text" json:"description"`
+	ProcessID   uint      `gorm:"index" json:"process_id"`
+	Process     *Process  `json:"process"`
+	GroupID     *uint     `gorm:"index" json:"group_id"`
+	Group       *Group    `json:"group"`
+	IsFinal     bool      `gorm:"default:false" json:"is_final"`
+	CreatedAt   time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt   time.Time `gorm:"autoUpdateTime" json:"updated_at"`
+}
+
+type TaskExecution struct {
 	ID          uint       `gorm:"primaryKey;autoIncrement" json:"id"`
-	Title       string     `gorm:"type:varchar(100);not null" json:"title"`
-	Description string     `gorm:"type:text" json:"description"`
-	ProcessID   uint       `gorm:"index" json:"process_id"`
-	Process     *Process   `json:"process"`
-	GroupID     *uint      `gorm:"index" json:"group_id"`
-	Group       *Group     `json:"group"`
-	IsFinal     bool       `gorm:"default:false" json:"is_final"`
-	UserID      *int64     `gorm:"type:bigint;index" json:"user_id"`
+	TaskID      uint       `gorm:"index" json:"task_id"`
+	Task        *Task      `json:"task"`
 	Status      TaskStatus `gorm:"type:varchar(50);default:'pending'" json:"status"`
-	AssigneeID  *int64     `gorm:"type:bigint;index" json:"assignee_id"`
+	UserID      *int64     `gorm:"type:bigint;index" json:"user_id"`
+	User        *User      `json:"user"`
 	AssignedAt  *time.Time `json:"assigned_at"`
 	CompletedAt *time.Time `json:"completed_at"`
 	CreatedAt   time.Time  `gorm:"autoCreateTime" json:"created_at"`

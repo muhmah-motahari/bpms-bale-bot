@@ -22,7 +22,6 @@ var (
 	processBuilderService *service.ProcessBuilderService = service.NewProcessBuilderService()
 
 	taskRepo           repository.TaskRepository   = repository.NewTaskRepository(db)
-	taskService        service.TaskService         = service.NewTaskService(taskRepo)
 	taskBuilderService *service.TaskBuilderService = service.NewTaskBuilderService()
 
 	userRepo     repository.UserRepository  = repository.NewUserRepository(db)
@@ -32,11 +31,6 @@ var (
 	userService = service.NewUserService(userRepo)
 
 	processExecutionService = service.NewProcessExecutionService(processRepo, taskRepo, groupRepo)
-
-	// Initialize handlers
-	processHandler = handlers.NewProcessHandler(processService, processBuilderService, processExecutionService, taskService)
-	taskHandler    = handlers.NewTaskHandler(taskService, taskBuilderService, processService, groupService)
-	groupHandler   = handlers.NewGroupHandler(groupService, userService)
 )
 
 func main() {
@@ -49,6 +43,13 @@ func main() {
 	bot.Debug = false
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
+
+	taskService := service.NewTaskService(taskRepo, groupService, bot)
+
+	// Initialize handlers
+	processHandler := handlers.NewProcessHandler(processService, processBuilderService, processExecutionService, taskService)
+	taskHandler := handlers.NewTaskHandler(taskService, taskBuilderService, processService, groupService)
+	groupHandler := handlers.NewGroupHandler(groupService, userService)
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
@@ -75,6 +76,8 @@ func main() {
 			processHandler.HandleProcessCreation(bot, update)
 			// Handle process execution
 			processHandler.HandleProcessExecution(bot, update)
+			// Handle process commands
+			processHandler.HandleProcessCommands(bot, update)
 			// Handle task creation
 			taskHandler.HandleTaskCreation(bot, update)
 			// Handle task commands
