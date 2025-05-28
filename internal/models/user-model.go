@@ -18,7 +18,7 @@ type (
 	}
 
 	UserGroups struct {
-		UserID    int64 `gorm:"primaryKey"`
+		UserID    int64 `gorm:"primaryKey;type:bigint"`
 		GroupID   uint  `gorm:"primaryKey"`
 		CreatedAt time.Time
 		DeletedAt gorm.DeletedAt

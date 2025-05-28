@@ -13,7 +13,8 @@ type GroupBuilderService struct {
 
 // GroupBuilder represents the state of a group being built
 type GroupBuilder struct {
-	Name string
+	Name      string
+	IsJoining bool // true if user is in the process of joining a group
 }
 
 // NewGroupBuilderService creates a new GroupBuilderService
@@ -28,6 +29,15 @@ func (s *GroupBuilderService) StartGroup(userID int64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.builders[userID] = &GroupBuilder{}
+}
+
+// StartJoinGroup starts the process of joining a group
+func (s *GroupBuilderService) StartJoinGroup(userID int64) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.builders[userID] = &GroupBuilder{
+		IsJoining: true,
+	}
 }
 
 // GetBuilder returns the builder for a user if it exists
@@ -60,10 +70,23 @@ func (s *GroupBuilderService) CompleteGroup(userID int64) (*models.Group, bool) 
 	}
 
 	group := &models.Group{
-		Name:    builder.Name,
-		OwnerID: userID,
+		Name: builder.Name,
 	}
 
 	delete(s.builders, userID)
 	return group, true
+}
+
+// CompleteJoinGroup completes the join group process and returns the join key
+func (s *GroupBuilderService) CompleteJoinGroup(userID int64) (string, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	builder, exists := s.builders[userID]
+	if !exists || !builder.IsJoining {
+		return "", false
+	}
+
+	joinKey := builder.Name
+	delete(s.builders, userID)
+	return joinKey, true
 }

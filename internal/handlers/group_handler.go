@@ -44,6 +44,11 @@ func (h *GroupHandler) HandleGroupCommands(bot *tgbotapi.BotAPI, update tgbotapi
 		sendMessage(chatID, "لطفا نام گروه را وارد کنید")
 		return
 
+	case update.Message.Text == "عضویت در گروه":
+		h.groupBuilderService.StartJoinGroup(userID)
+		sendMessage(chatID, "لطفا کد پیوستن به گروه را بفرستید")
+		return
+
 	case update.Message.Text == "لیست گروه ها":
 		groups, err := h.groupService.GetAllGroups()
 		if err != nil {
@@ -84,25 +89,48 @@ func (h *GroupHandler) HandleGroupCommands(bot *tgbotapi.BotAPI, update tgbotapi
 	}
 
 	// Check if user is in the middle of creating a group
-	_, exists := h.groupBuilderService.GetBuilder(userID)
+	builder, exists := h.groupBuilderService.GetBuilder(userID)
 	if exists {
-		if !h.groupBuilderService.SetName(userID, update.Message.Text) {
-			sendMessage(chatID, "خطا در تنظیم نام گروه.")
+		if builder.IsJoining {
+			// User is in the process of joining a group
+			if !h.groupBuilderService.SetName(userID, update.Message.Text) {
+				sendMessage(chatID, "خطا در پردازش کد پیوستن.")
+				return
+			}
+
+			joinKey, success := h.groupBuilderService.CompleteJoinGroup(userID)
+			if !success {
+				sendMessage(chatID, "خطا در تکمیل فرآیند پیوستن به گروه.")
+				return
+			}
+
+			if err := h.groupService.JoinGroup(userID, joinKey); err != nil {
+				sendMessage(chatID, "خطا در پیوستن به گروه. لطفا کد پیوست را بررسی کنید یا مطمئن شوید قبلا عضو نشده‌اید: "+err.Error())
+				return
+			}
+			sendMessage(chatID, "با موفقیت به گروه پیوستید!")
+			return
+		} else {
+			// User is in the process of creating a group
+			if !h.groupBuilderService.SetName(userID, update.Message.Text) {
+				sendMessage(chatID, "خطا در تنظیم نام گروه.")
+				return
+			}
+
+			group, success := h.groupBuilderService.CompleteGroup(userID)
+			if !success {
+				sendMessage(chatID, "خطا در تکمیل ایجاد گروه.")
+				return
+			}
+
+			if err := h.groupService.CreateGroup(group); err != nil {
+				sendMessage(chatID, "خطا در ایجاد گروه. لطفا دوباره تلاش کنید.")
+				return
+			}
+
+			sendMessage(chatID, fmt.Sprintf("گروه با موفقیت ساخته شد!\nکلید عضویت به گروه %s\nافرادی که می‌خواهید در این گروه عضو شوند این پیام را برایشان ارسال کنید:\n\nجهت عضویت در گروه %s ، به بازو @bpmss پیام زیر را ارسال کنید:\nپیوستن به گروه: %s", group.Name, group.Name, group.JoinKey))
 			return
 		}
-
-		group, success := h.groupBuilderService.CompleteGroup(userID)
-		if !success {
-			sendMessage(chatID, "خطا در تکمیل ایجاد گروه.")
-			return
-		}
-
-		if err := h.groupService.CreateGroup(group); err != nil {
-			sendMessage(chatID, "خطا در ایجاد گروه. لطفا دوباره تلاش کنید.")
-			return
-		}
-
-		sendMessage(chatID, fmt.Sprintf("گروه با موفقیت ساخته شد!\nکلید عضویت به گروه %s\nافرادی که می‌خواهید در این گروه عضو شوند این پیام را برایشان ارسال کنید:\n\nجهت عضویت در گروه %s ، به بازو @bpmss پیام زیر را ارسال کنید:\nپیوستن به گروه: %s", group.Name, group.Name, group.JoinKey))
 	}
 }
 
