@@ -17,8 +17,8 @@ type ProcessService interface {
 	GetProcessExecutionsByProcessID(processID uint) ([]models.ProcessExecution, error)
 	UpdateProcessExecution(execution *models.ProcessExecution) error
 	GetPendingProcessExecutions() ([]models.ProcessExecution, error)
-	AddPendingTask(executionID uint, taskID uint) error
-	RemovePendingTask(executionID uint, taskID uint) error
+	AddPendingTask(executionID uint, taskExecutionID uint) error
+	RemovePendingTask(executionID uint, taskExecutionID uint) error
 }
 
 type processService struct {
@@ -63,10 +63,10 @@ func (s *processService) StartProcessExecution(processID uint) (*models.ProcessE
 	}
 
 	execution := &models.ProcessExecution{
-		ProcessID:      processID,
-		Status:         models.ProcessExecutionStatusPending,
-		PendingTaskIDs: make([]uint, 0),
-		StartedAt:      time.Now(),
+		ProcessID:               processID,
+		Status:                  models.ProcessExecutionStatusPending,
+		PendingTaskExecutionIDs: make([]uint, 0),
+		StartedAt:               time.Now(),
 	}
 
 	if err := s.repo.SaveProcessExecution(execution); err != nil {
@@ -92,37 +92,37 @@ func (s *processService) GetPendingProcessExecutions() ([]models.ProcessExecutio
 	return s.repo.GetPendingProcessExecutions()
 }
 
-func (s *processService) AddPendingTask(executionID uint, taskID uint) error {
+func (s *processService) AddPendingTask(executionID uint, taskExecutionID uint) error {
 	execution, err := s.repo.GetProcessExecutionByID(executionID)
 	if err != nil {
 		return err
 	}
 
-	// Check if task is already in pending list
-	for _, id := range execution.PendingTaskIDs {
-		if id == taskID {
-			return nil // Task already in pending list
+	// Check if task execution is already in pending list
+	for _, id := range execution.PendingTaskExecutionIDs {
+		if id == taskExecutionID {
+			return nil // Task execution already in pending list
 		}
 	}
 
-	execution.PendingTaskIDs = append(execution.PendingTaskIDs, taskID)
+	execution.PendingTaskExecutionIDs = append(execution.PendingTaskExecutionIDs, taskExecutionID)
 	return s.repo.UpdateProcessExecution(execution)
 }
 
-func (s *processService) RemovePendingTask(executionID uint, taskID uint) error {
+func (s *processService) RemovePendingTask(executionID uint, taskExecutionID uint) error {
 	execution, err := s.repo.GetProcessExecutionByID(executionID)
 	if err != nil {
 		return err
 	}
 
-	// Remove task from pending list
+	// Remove task execution from pending list
 	newPendingTasks := make([]uint, 0)
-	for _, id := range execution.PendingTaskIDs {
-		if id != taskID {
+	for _, id := range execution.PendingTaskExecutionIDs {
+		if id != taskExecutionID {
 			newPendingTasks = append(newPendingTasks, id)
 		}
 	}
 
-	execution.PendingTaskIDs = newPendingTasks
+	execution.PendingTaskExecutionIDs = newPendingTasks
 	return s.repo.UpdateProcessExecution(execution)
 }

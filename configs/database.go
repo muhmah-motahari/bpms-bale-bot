@@ -29,6 +29,8 @@ func SetUpDatabaseConnection(env Env) *gorm.DB {
 		&models.ProcessExecution{},
 		&models.TaskExecution{},
 		&models.PendingTask{},
+		&models.CompletedTask{},
+		&models.InProgressTask{},
 	)
 	if err != nil {
 		fmt.Println(err)

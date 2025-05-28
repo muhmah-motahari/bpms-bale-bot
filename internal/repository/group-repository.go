@@ -13,8 +13,8 @@ type (
 		GetByJoinKey(joinKey string) (*models.Group, error)
 		GetMembers(groupID uint) ([]models.User, error)
 		GetByID(id uint) (*models.Group, error)
-		AddMember(groupID uint, userID int64) error
-		RemoveMember(groupID uint, userID int64) error
+		AddMember(groupID uint, userID uint) error
+		RemoveMember(groupID uint, userID uint) error
 		SaveUserGroup(req models.UserGroups) error
 	}
 
@@ -75,7 +75,7 @@ func (r *groupRepository) GetByID(id uint) (*models.Group, error) {
 	return &group, nil
 }
 
-func (r *groupRepository) AddMember(groupID uint, userID int64) error {
+func (r *groupRepository) AddMember(groupID uint, userID uint) error {
 	userGroup := models.UserGroups{
 		UserID:  userID,
 		GroupID: groupID,
@@ -83,7 +83,7 @@ func (r *groupRepository) AddMember(groupID uint, userID int64) error {
 	return r.db.Create(&userGroup).Error
 }
 
-func (r *groupRepository) RemoveMember(groupID uint, userID int64) error {
+func (r *groupRepository) RemoveMember(groupID uint, userID uint) error {
 	return r.db.Where("group_id = ? AND user_id = ?", groupID, userID).Delete(&models.UserGroups{}).Error
 }
 

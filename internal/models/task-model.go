@@ -21,16 +21,18 @@ type Task struct {
 }
 
 type TaskExecution struct {
-	ID          uint       `gorm:"primaryKey;autoIncrement" json:"id"`
-	TaskID      uint       `gorm:"index" json:"task_id"`
-	Task        *Task      `json:"task"`
-	Status      TaskStatus `gorm:"type:varchar(50);default:'pending'" json:"status"`
-	UserID      *int64     `gorm:"type:bigint;index" json:"user_id"`
-	User        *User      `json:"user"`
-	AssignedAt  *time.Time `json:"assigned_at"`
-	CompletedAt *time.Time `json:"completed_at"`
-	CreatedAt   time.Time  `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt   time.Time  `gorm:"autoUpdateTime" json:"updated_at"`
+	ID                 uint       `gorm:"primaryKey;autoIncrement" json:"id"`
+	TaskID             uint       `gorm:"index" json:"task_id"`
+	Task               *Task      `json:"task"`
+	ProcessExecutionID uint       `gorm:"index" json:"process_execution_id"`
+	Status             TaskStatus `gorm:"type:varchar(50);default:'pending'" json:"status"`
+	UserID             *int64     `gorm:"type:bigint;index" json:"user_id"`
+	User               *User      `json:"user"`
+	AssignedAt         *time.Time `json:"assigned_at"`
+	UserDescription    string     `json:"user_description"`
+	CompletedAt        *time.Time `json:"completed_at"`
+	CreatedAt          time.Time  `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt          time.Time  `gorm:"autoUpdateTime" json:"updated_at"`
 }
 
 // TaskPrerequisite represents prerequisite tasks that must be completed before a task can start

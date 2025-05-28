@@ -78,11 +78,11 @@ func (r *processRepository) SaveProcessExecution(execution *models.ProcessExecut
 		return err
 	}
 
-	// Save pending tasks
-	for _, taskID := range execution.PendingTaskIDs {
+	// Save pending task executions
+	for _, taskExecutionID := range execution.PendingTaskExecutionIDs {
 		pendingTask := models.PendingTask{
 			ProcessExecutionID: execution.ID,
-			TaskID:             taskID,
+			TaskExecutionID:    taskExecutionID,
 		}
 		if err := tx.Create(&pendingTask).Error; err != nil {
 			tx.Rollback()
@@ -105,10 +105,32 @@ func (r *processRepository) GetProcessExecutionByID(id uint) (*models.ProcessExe
 		return nil, err
 	}
 
-	// Convert to task IDs
-	execution.PendingTaskIDs = make([]uint, len(pendingTasks))
+	// Get completed tasks
+	var completedTasks []models.CompletedTask
+	if err := r.db.Where("process_execution_id = ?", id).Find(&completedTasks).Error; err != nil {
+		return nil, err
+	}
+
+	// Get in-progress tasks
+	var inProgressTasks []models.InProgressTask
+	if err := r.db.Where("process_execution_id = ?", id).Find(&inProgressTasks).Error; err != nil {
+		return nil, err
+	}
+
+	// Convert to task execution IDs
+	execution.PendingTaskExecutionIDs = make([]uint, len(pendingTasks))
 	for i, pt := range pendingTasks {
-		execution.PendingTaskIDs[i] = pt.TaskID
+		execution.PendingTaskExecutionIDs[i] = pt.TaskExecutionID
+	}
+
+	execution.CompletedTaskExecutionIDs = make([]uint, len(completedTasks))
+	for i, ct := range completedTasks {
+		execution.CompletedTaskExecutionIDs[i] = ct.TaskExecutionID
+	}
+
+	execution.InProgressTaskExecutionIDs = make([]uint, len(inProgressTasks))
+	for i, it := range inProgressTasks {
+		execution.InProgressTaskExecutionIDs[i] = it.TaskExecutionID
 	}
 
 	return &execution, nil
@@ -134,19 +156,51 @@ func (r *processRepository) UpdateProcessExecution(execution *models.ProcessExec
 		return err
 	}
 
-	// Delete existing pending tasks
+	// Delete existing task states
 	if err := tx.Where("process_execution_id = ?", execution.ID).Delete(&models.PendingTask{}).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
+	if err := tx.Where("process_execution_id = ?", execution.ID).Delete(&models.CompletedTask{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err := tx.Where("process_execution_id = ?", execution.ID).Delete(&models.InProgressTask{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
 
-	// Save new pending tasks
-	for _, taskID := range execution.PendingTaskIDs {
+	// Save new pending task executions
+	for _, taskExecutionID := range execution.PendingTaskExecutionIDs {
 		pendingTask := models.PendingTask{
 			ProcessExecutionID: execution.ID,
-			TaskID:             taskID,
+			TaskExecutionID:    taskExecutionID,
 		}
 		if err := tx.Create(&pendingTask).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	// Save completed task executions
+	for _, taskExecutionID := range execution.CompletedTaskExecutionIDs {
+		completedTask := models.CompletedTask{
+			ProcessExecutionID: execution.ID,
+			TaskExecutionID:    taskExecutionID,
+		}
+		if err := tx.Create(&completedTask).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	// Save in-progress task executions
+	for _, taskExecutionID := range execution.InProgressTaskExecutionIDs {
+		inProgressTask := models.InProgressTask{
+			ProcessExecutionID: execution.ID,
+			TaskExecutionID:    taskExecutionID,
+		}
+		if err := tx.Create(&inProgressTask).Error; err != nil {
 			tx.Rollback()
 			return err
 		}
