@@ -113,7 +113,7 @@ func (h *TaskHandler) HandleTaskCreation(bot *tgbotapi.BotAPI, update tgbotapi.U
 				sendMessage(chatID, "خطا در پردازش اتمام پیش‌نیازها.")
 				return
 			}
-			groups, err := h.groupService.GetAllGroups()
+			groups, err := h.groupService.GetGroupsByOwnerID(userID)
 			if err != nil || len(groups) == 0 {
 				sendMessage(chatID, "گروهی برای تخصیص وظیفه یافت نشد. لطفا ابتدا یک گروه ایجاد کنید.")
 				return
