@@ -364,10 +364,6 @@ func (h *TaskHandler) HandleCallbackQuery(bot *tgbotapi.BotAPI, update tgbotapi.
 		taskDetails := fmt.Sprintf("عنوان: %s\nتوضیحات: %s", task.Title, task.Description)
 		sendMessage(chatID, taskDetails)
 		callbackMsg = "جزئیات وظیفه"
-
-	default:
-		log.Printf("TaskHandler received unhandled callback data: %s from chatID %d", data, chatID)
-		callbackMsg = "عملیات نامشخص"
 	}
 
 	if callbackMsg != "" {
