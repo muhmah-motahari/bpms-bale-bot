@@ -50,7 +50,7 @@ func (h *GroupHandler) HandleGroupCommands(bot *tgbotapi.BotAPI, update tgbotapi
 		return
 
 	case update.Message.Text == "لیست گروه ها":
-		groups, err := h.groupService.GetAllGroups()
+		groups, err := h.groupService.GetGroupsByOwnerID(userID)
 		if err != nil {
 			sendMessage(chatID, "خطا در دریافت لیست گروه‌ها. لطفا دوباره تلاش کنید.")
 			return

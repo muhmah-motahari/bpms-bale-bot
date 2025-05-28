@@ -16,6 +16,7 @@ type (
 		AddMember(groupID uint, userID int64) error
 		RemoveMember(groupID uint, userID int64) error
 		SaveUserGroup(req models.UserGroups) error
+		GetGroupsByOwnerID(ownerID int64) ([]*models.Group, error)
 	}
 
 	groupRepository struct {
@@ -89,4 +90,12 @@ func (r *groupRepository) RemoveMember(groupID uint, userID int64) error {
 
 func (r *groupRepository) SaveUserGroup(req models.UserGroups) error {
 	return r.db.Create(&req).Error
+}
+
+func (r *groupRepository) GetGroupsByOwnerID(ownerID int64) ([]*models.Group, error) {
+	var groups []*models.Group
+	if err := r.db.Where("owner_id = ?", ownerID).Find(&groups).Error; err != nil {
+		return nil, err
+	}
+	return groups, nil
 }

@@ -18,6 +18,7 @@ type GroupService interface {
 	GenerateJoinKey() string
 	JoinGroup(userID int64, joinKey string) error
 	GetAllGroups() ([]models.Group, error)
+	GetGroupsByOwnerID(ownerID int64) ([]*models.Group, error)
 }
 
 type groupService struct {
@@ -113,4 +114,8 @@ func (g *groupService) AddToNewGroup(message dto.Message) {
 
 func (s *groupService) GetAllGroups() ([]models.Group, error) {
 	return s.repo.GetAll()
+}
+
+func (s *groupService) GetGroupsByOwnerID(ownerID int64) ([]*models.Group, error) {
+	return s.repo.GetGroupsByOwnerID(ownerID)
 }

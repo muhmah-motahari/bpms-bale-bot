@@ -70,7 +70,8 @@ func (s *GroupBuilderService) CompleteGroup(userID int64) (*models.Group, bool) 
 	}
 
 	group := &models.Group{
-		Name: builder.Name,
+		Name:    builder.Name,
+		OwnerID: userID,
 	}
 
 	delete(s.builders, userID)
