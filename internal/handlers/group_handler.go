@@ -181,11 +181,7 @@ func (h *GroupHandler) HandleGroupCallback(bot *tgbotapi.BotAPI, update tgbotapi
 				}
 			}
 		}
-	} else {
-		log.Printf("GroupHandler received unhandled callback data: %s from chatID %d", data, chatID)
-		callbackMsg = "عملیات نامشخص"
 	}
-
 	// Answer the callback query
 	if callbackMsg != "" {
 		callback := tgbotapi.NewCallback(update.CallbackQuery.ID, callbackMsg)
