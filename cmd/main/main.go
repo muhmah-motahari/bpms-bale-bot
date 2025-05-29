@@ -50,9 +50,8 @@ var mainKeyboard = tgbotapi.NewReplyKeyboard(
 )
 
 func init() {
-	APIEndpoint := "https://tapi.bale.ai/bot%s/%s"
 	var err error
-	bot, err = tgbotapi.NewBotAPIWithAPIEndpoint(env.Token, APIEndpoint)
+	bot, err = tgbotapi.NewBotAPIWithAPIEndpoint(env.Token, env.APIEndpoint)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -68,7 +67,7 @@ func init() {
 	taskHandler = handlers.NewTaskHandler(taskService, taskBuilderService, processService, groupService)
 	processHandler = handlers.NewProcessHandler(processService, processBuilderService, processExecutionService, taskService)
 	helpHandler = handlers.NewHelpHandler(env)
-	startHandler = handlers.NewStartHandler()
+	startHandler = handlers.NewStartHandler(&mainKeyboard)
 }
 
 func main() {

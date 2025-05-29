@@ -16,6 +16,7 @@ type Env struct {
 	Token             string
 	HelpMessageID     int
 	HelpMessageChatID int64
+	APIEndpoint       string
 }
 
 func NewEnv() Env {
@@ -26,7 +27,7 @@ func NewEnv() Env {
 
 	env := Env{
 		AppEnv:            os.Getenv("APP_ENV"),
-		BaleAPIAddress:    "https://tapi.bale.ai/bot" + os.Getenv("BALE_TOKEN") + "/",
+		APIEndpoint:       os.Getenv("APIENDPOINT"),
 		TimeLocation:      timeLocation,
 		DSN:               os.Getenv("DSN"),
 		BotID:             BotID,

@@ -7,11 +7,15 @@ import (
 )
 
 // StartHandler handles the /start command
-type StartHandler struct{}
+type StartHandler struct {
+	keyboard *tgbotapi.ReplyKeyboardMarkup
+}
 
 // NewStartHandler creates a new StartHandler
-func NewStartHandler() *StartHandler {
-	return &StartHandler{}
+func NewStartHandler(keyboard *tgbotapi.ReplyKeyboardMarkup) *StartHandler {
+	return &StartHandler{
+		keyboard: keyboard,
+	}
 }
 
 // HandleStartCommand handles the /start command
@@ -36,28 +40,8 @@ func (h *StartHandler) HandleStartCommand(bot *tgbotapi.BotAPI, update tgbotapi.
 
 برای اطلاعات بیشتر می‌توانید از دستور راهنما استفاده کنید.`
 
-		keyboard := tgbotapi.NewReplyKeyboard(
-			tgbotapi.NewKeyboardButtonRow(
-				tgbotapi.NewKeyboardButton("فرایند جدید"),
-				tgbotapi.NewKeyboardButton("فرایند ها"),
-			),
-			tgbotapi.NewKeyboardButtonRow(
-				tgbotapi.NewKeyboardButton("شروع فرایند"),
-				tgbotapi.NewKeyboardButton("وظیفه جدید"),
-			),
-			tgbotapi.NewKeyboardButtonRow(
-				tgbotapi.NewKeyboardButton("گروه جدید"),
-				tgbotapi.NewKeyboardButton("گروه ها"),
-			),
-			tgbotapi.NewKeyboardButtonRow(
-				tgbotapi.NewKeyboardButton("راهنما"),
-			),
-		)
-		keyboard.OneTimeKeyboard = false
-		keyboard.ResizeKeyboard = true
-
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, welcomeMessage)
-		msg.ReplyMarkup = keyboard
+		msg.ReplyMarkup = h.keyboard
 		if _, err := bot.Send(msg); err != nil {
 			log.Printf("Error sending welcome message: %v", err)
 			sendMessage(update.Message.Chat.ID, "متاسفانه در ارسال پیام خوش‌آمدگویی مشکلی پیش آمده. لطفا دوباره تلاش کنید.")
