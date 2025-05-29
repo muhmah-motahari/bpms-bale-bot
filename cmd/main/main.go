@@ -40,6 +40,7 @@ var (
 	taskHandler    *handlers.TaskHandler
 	processHandler *handlers.ProcessHandler
 	helpHandler    *handlers.HelpHandler
+	startHandler   *handlers.StartHandler
 )
 
 var mainKeyboard = tgbotapi.NewReplyKeyboard(
@@ -66,7 +67,8 @@ func init() {
 	groupHandler = handlers.NewGroupHandler(groupService, userService, groupBuilderService)
 	taskHandler = handlers.NewTaskHandler(taskService, taskBuilderService, processService, groupService)
 	processHandler = handlers.NewProcessHandler(processService, processBuilderService, processExecutionService, taskService)
-	helpHandler = handlers.NewHelpHandler()
+	helpHandler = handlers.NewHelpHandler(env)
+	startHandler = handlers.NewStartHandler()
 }
 
 func main() {
@@ -100,6 +102,7 @@ func main() {
 			}
 
 			// Pass bot, update, and the sender function to handlers
+			startHandler.HandleStartCommand(bot, update, sendMessageWithKeyboard)
 			processHandler.HandleProcessCreation(bot, update, sendMessageWithKeyboard)
 			processHandler.HandleProcessExecution(bot, update, sendMessageWithKeyboard)
 			processHandler.HandleProcessCommands(bot, update, sendMessageWithKeyboard)

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bbb/configs"
 	"log"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -8,15 +9,13 @@ import (
 
 // HelpHandler handles the help command
 type HelpHandler struct {
-	channelChatID  int64
-	channelMessage int
+	env configs.Env
 }
 
 // NewHelpHandler creates a new HelpHandler
-func NewHelpHandler() *HelpHandler {
+func NewHelpHandler(env configs.Env) *HelpHandler {
 	return &HelpHandler{
-		channelChatID:  5750547246,
-		channelMessage: 814,
+		env: env,
 	}
 }
 
@@ -28,7 +27,7 @@ func (h *HelpHandler) HandleHelpCommand(bot *tgbotapi.BotAPI, update tgbotapi.Up
 
 	if update.Message.Text == "راهنما" {
 		// Forward the message from channel
-		forward := tgbotapi.NewForward(update.Message.Chat.ID, h.channelChatID, h.channelMessage)
+		forward := tgbotapi.NewForward(update.Message.Chat.ID, h.env.HelpMessageChatID, h.env.HelpMessageID)
 		if _, err := bot.Send(forward); err != nil {
 			log.Printf("Error forwarding help message: %v", err)
 			sendMessage(update.Message.Chat.ID, "متاسفانه در ارسال راهنما مشکلی پیش آمده. لطفا دوباره تلاش کنید.")
