@@ -113,22 +113,22 @@ func (h *TaskHandler) HandleTaskCreation(bot *tgbotapi.BotAPI, update tgbotapi.U
 				sendMessage(chatID, "خطا در پردازش اتمام پیش‌نیازها.")
 				return
 			}
-			groups, err := h.teamService.GetTeamsByOwnerID(userID)
-			if err != nil || len(groups) == 0 {
-				sendMessage(chatID, "گروهی برای تخصیص وظیفه یافت نشد. لطفا ابتدا یک گروه ایجاد کنید.")
+			teams, err := h.teamService.GetTeamsByOwnerID(userID)
+			if err != nil || len(teams) == 0 {
+				sendMessage(chatID, "تیمی برای تخصیص وظیفه یافت نشد. لطفا ابتدا یک تیم ایجاد کنید.")
 				return
 			}
-			var groupKeyboardRows [][]tgbotapi.InlineKeyboardButton
-			for _, group := range groups {
+			var teamKeyboardRows [][]tgbotapi.InlineKeyboardButton
+			for _, team := range teams {
 				row := []tgbotapi.InlineKeyboardButton{
-					tgbotapi.NewInlineKeyboardButtonData(group.Name, fmt.Sprintf("select_group_%d", group.ID)),
+					tgbotapi.NewInlineKeyboardButtonData(team.Name, fmt.Sprintf("select_team_%d", team.ID)),
 				}
-				groupKeyboardRows = append(groupKeyboardRows, row)
+				teamKeyboardRows = append(teamKeyboardRows, row)
 			}
-			msg := tgbotapi.NewMessage(chatID, "لطفا گروه مسئول این وظیفه را انتخاب کنید:")
-			msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(groupKeyboardRows...)
+			msg := tgbotapi.NewMessage(chatID, "لطفا تیم مسئول این وظیفه را انتخاب کنید:")
+			msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(teamKeyboardRows...)
 			if _, errSend := bot.Send(msg); errSend != nil {
-				log.Printf("Error sending group selection: %v", errSend)
+				log.Printf("Error sending team selection: %v", errSend)
 			}
 		} else if responseText == "بله" || responseText == "yes" {
 			sendMessage(chatID, "لطفا شناسه وظیفه پیش‌نیاز بعدی را وارد کنید یا از لیست بالا انتخاب کنید (اگر نمایش داده شده بود).")
@@ -195,36 +195,36 @@ func (h *TaskHandler) HandleCallbackQuery(bot *tgbotapi.BotAPI, update tgbotapi.
 			callbackMsg = "خطا"
 			break
 		}
-		groups, err := h.teamService.GetAllTeams()
-		if err != nil || len(groups) == 0 {
-			sendMessage(chatID, "گروهی برای تخصیص وظیفه یافت نشد. لطفا ابتدا یک گروه ایجاد کنید.")
-			callbackMsg = "گروهی یافت نشد"
+		teams, err := h.teamService.GetAllTeams()
+		if err != nil || len(teams) == 0 {
+			sendMessage(chatID, "تیم برای تخصیص وظیفه یافت نشد. لطفا ابتدا یک تیم ایجاد کنید.")
+			callbackMsg = "تیمی یافت نشد"
 			break
 		}
-		var groupKeyboardRows [][]tgbotapi.InlineKeyboardButton
-		for _, group := range groups {
+		var teamKeyboardRows [][]tgbotapi.InlineKeyboardButton
+		for _, team := range teams {
 			row := []tgbotapi.InlineKeyboardButton{
-				tgbotapi.NewInlineKeyboardButtonData(group.Name, fmt.Sprintf("select_group_%d", group.ID)),
+				tgbotapi.NewInlineKeyboardButtonData(team.Name, fmt.Sprintf("select_team_%d", team.ID)),
 			}
-			groupKeyboardRows = append(groupKeyboardRows, row)
+			teamKeyboardRows = append(teamKeyboardRows, row)
 		}
-		msg := tgbotapi.NewMessage(chatID, "لطفا گروه مسئول این وظیفه را انتخاب کنید:")
-		msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(groupKeyboardRows...)
+		msg := tgbotapi.NewMessage(chatID, "لطفا تیم مسئول این وظیفه را انتخاب کنید:")
+		msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(teamKeyboardRows...)
 		if _, errSend := bot.Send(msg); errSend != nil {
-			log.Printf("Error sending group selection: %v", errSend)
+			log.Printf("Error sending team selection: %v", errSend)
 		}
-		callbackMsg = "انتخاب گروه"
+		callbackMsg = "انتخاب تیم"
 
-	case strings.HasPrefix(data, "select_group_"):
-		groupID, err := strconv.ParseUint(strings.TrimPrefix(data, "select_group_"), 10, 64)
+	case strings.HasPrefix(data, "select_team_"):
+		teamID, err := strconv.ParseUint(strings.TrimPrefix(data, "select_team_"), 10, 64)
 		if err != nil {
-			sendMessage(chatID, "خطا در پردازش شناسه گروه.")
-			callbackMsg = "خطای شناسه گروه"
+			sendMessage(chatID, "خطا در پردازش شناسه تیم.")
+			callbackMsg = "خطای شناسه تیم"
 			break
 		}
-		if !h.taskBuilderService.SetGroup(userID, uint(groupID)) {
-			sendMessage(chatID, "خطا در تنظیم گروه برای وظیفه.")
-			callbackMsg = "خطا در تنظیم گروه"
+		if !h.taskBuilderService.SetTeam(userID, uint(teamID)) {
+			sendMessage(chatID, "خطا در تنظیم تیم برای وظیفه.")
+			callbackMsg = "خطا در تنظیم تیم"
 			break
 		}
 		keyboard := tgbotapi.NewInlineKeyboardMarkup(
@@ -238,7 +238,7 @@ func (h *TaskHandler) HandleCallbackQuery(bot *tgbotapi.BotAPI, update tgbotapi.
 		if _, errSend := bot.Send(msg); errSend != nil {
 			log.Printf("Error sending final task confirmation: %v", errSend)
 		}
-		callbackMsg = "گروه انتخاب شد"
+		callbackMsg = "تیم انتخاب شد"
 
 	case strings.HasPrefix(data, "set_final_"):
 		isFinal := strings.HasSuffix(data, "true")

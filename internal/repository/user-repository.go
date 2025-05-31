@@ -9,7 +9,7 @@ import (
 type (
 	UserRepository interface {
 		Save(req *models.User) error
-		SaveUserGroup(req models.UserTeams) error
+		SaveUserTeam(req models.UserTeams) error
 		GetByID(userID int64) (*models.User, error)
 		Update(req *models.User) error
 	}
@@ -33,7 +33,7 @@ func (r *userRepository) Update(req *models.User) error {
 	return r.db.Save(req).Error
 }
 
-func (r *userRepository) SaveUserGroup(req models.UserTeams) error {
+func (r *userRepository) SaveUserTeam(req models.UserTeams) error {
 	if err := r.db.Save(&req).Error; err != nil {
 		return err
 	}

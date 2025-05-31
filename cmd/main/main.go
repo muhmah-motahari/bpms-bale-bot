@@ -27,7 +27,7 @@ var (
 
 	// Services
 	userService             = service.NewUserService(userRepo)
-	teamService             = service.NewGroupService(teamRepo, userRepo)
+	teamService             = service.NewTeamService(teamRepo, userRepo)
 	processService          = service.NewProcessService(processRepo)
 	processBuilderService   = service.NewProcessBuilderService()
 	processExecutionService = service.NewProcessExecutionService(processRepo, taskRepo, teamRepo)

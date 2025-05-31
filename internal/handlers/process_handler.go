@@ -245,7 +245,7 @@ func (h *ProcessHandler) HandleProcessCallback(bot *tgbotapi.BotAPI, update tgbo
 		}
 
 		if startedTasksCount > 0 {
-			responseMsg := fmt.Sprintf("فرایند با شناسه اجرای %d شروع شد.\nوظایف اولیه زیر آغاز شدند و به گروه‌های مربوطه اطلاع داده شد:\n%s", execution.ID, startedTasksInfo.String())
+			responseMsg := fmt.Sprintf("فرایند با شناسه اجرای %d شروع شد.\nوظایف اولیه زیر آغاز شدند و به تیم‌های مربوطه اطلاع داده شد:\n%s", execution.ID, startedTasksInfo.String())
 			sendMessage(chatID, responseMsg)
 		} else {
 			sendMessage(chatID, fmt.Sprintf("فرایند با شناسه اجرای %d شروع شد، اما هیچ وظیفه اولیه‌ای با موفقیت آغاز نشد.", execution.ID))

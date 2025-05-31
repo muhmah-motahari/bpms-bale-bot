@@ -5,16 +5,16 @@ import (
 	"sync"
 )
 
-// TeamBuilderService handles the group creation flow
+// TeamBuilderService handles the team creation flow
 type TeamBuilderService struct {
 	builders map[int64]*TeamBuilder
 	mu       sync.RWMutex
 }
 
-// TeamBuilder represents the state of a group being built
+// TeamBuilder represents the state of a team being built
 type TeamBuilder struct {
 	Name      string
-	IsJoining bool // true if user is in the process of joining a group
+	IsJoining bool // true if user is in the process of joining a team
 }
 
 // NewTeamBuilderService creates a new TeamBuilderService
@@ -24,14 +24,14 @@ func NewTeamBuilderService() *TeamBuilderService {
 	}
 }
 
-// StartTeam starts a new group creation process for a user
+// StartTeam starts a new team creation process for a user
 func (s *TeamBuilderService) StartTeam(userID int64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.builders[userID] = &TeamBuilder{}
 }
 
-// StartJoinTeam starts the process of joining a group
+// StartJoinTeam starts the process of joining a team
 func (s *TeamBuilderService) StartJoinTeam(userID int64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -48,7 +48,7 @@ func (s *TeamBuilderService) GetBuilder(userID int64) (*TeamBuilder, bool) {
 	return builder, exists
 }
 
-// SetName sets the name for the group being built
+// SetName sets the name for the team being built
 func (s *TeamBuilderService) SetName(userID int64, name string) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -60,7 +60,7 @@ func (s *TeamBuilderService) SetName(userID int64, name string) bool {
 	return true
 }
 
-// CompleteTeam completes the group creation and returns the group
+// CompleteTeam completes the team creation and returns the team
 func (s *TeamBuilderService) CompleteTeam(userID int64) (*models.Team, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -78,7 +78,7 @@ func (s *TeamBuilderService) CompleteTeam(userID int64) (*models.Team, bool) {
 	return team, true
 }
 
-// CompleteJoinTeam completes the join group process and returns the join key
+// CompleteJoinTeam completes the join team process and returns the join key
 func (s *TeamBuilderService) CompleteJoinTeam(userID int64) (string, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

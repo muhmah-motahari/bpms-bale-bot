@@ -92,19 +92,19 @@ func (s *TaskBuilderService) SetHasMorePrerequisites(userID int64, hasMore bool)
 	if builder, exists := s.builders[userID]; exists && builder.CurrentStep == "prerequisites" {
 		builder.HasMorePrerequisites = hasMore
 		if !hasMore {
-			builder.CurrentStep = "group"
+			builder.CurrentStep = "team"
 		}
 		return true
 	}
 	return false
 }
 
-func (s *TaskBuilderService) SetGroup(userID int64, groupID uint) bool {
+func (s *TaskBuilderService) SetTeam(userID int64, teamID uint) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if builder, exists := s.builders[userID]; exists && builder.CurrentStep == "group" {
-		builder.Task.TeamID = &groupID
+	if builder, exists := s.builders[userID]; exists && builder.CurrentStep == "team" {
+		builder.Task.TeamID = &teamID
 		builder.CurrentStep = "is_final"
 		return true
 	}

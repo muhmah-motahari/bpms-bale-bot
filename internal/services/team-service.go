@@ -26,7 +26,7 @@ type teamService struct {
 	userRepo repository.UserRepository
 }
 
-func NewGroupService(repo repository.TeamRepository, userRepo repository.UserRepository) TeamService {
+func NewTeamService(repo repository.TeamRepository, userRepo repository.UserRepository) TeamService {
 	return &teamService{repo: repo, userRepo: userRepo}
 }
 
@@ -101,12 +101,12 @@ func (g *teamService) AddToNewTeam(message dto.Message) {
 		fmt.Println("Error: ", err)
 	}
 
-	// Save UserGroups
-	userGroup := models.UserTeams{
+	// Save UserTeams
+	userTeam := models.UserTeams{
 		UserID: user.ID,
 		TeamID: team.ID,
 	}
-	err = g.repo.SaveUserGroup(userGroup)
+	err = g.repo.SaveUserTeam(userTeam)
 	if err != nil {
 		fmt.Println("Error: ", err)
 	}
@@ -117,5 +117,5 @@ func (s *teamService) GetAllTeams() ([]models.Team, error) {
 }
 
 func (s *teamService) GetTeamsByOwnerID(ownerID int64) ([]*models.Team, error) {
-	return s.repo.GetGroupsByOwnerID(ownerID)
+	return s.repo.GetTeamsByOwnerID(ownerID)
 }

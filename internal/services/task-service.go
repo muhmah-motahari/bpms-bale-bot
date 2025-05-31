@@ -208,23 +208,23 @@ func (s *taskService) StartTaskExecution(processExecutionID, taskID uint) (model
 	}
 
 	if task.TeamID == nil {
-		return models.TaskExecution{}, errors.New("task has no group assigned")
+		return models.TaskExecution{}, errors.New("task has no team assigned")
 	}
 
 	team, err := s.teamService.GetTeamByID(*task.TeamID)
 	if err != nil {
-		return models.TaskExecution{}, fmt.Errorf("error getting group: %v", err)
+		return models.TaskExecution{}, fmt.Errorf("error getting team: %v", err)
 	}
 	if team == nil {
-		return models.TaskExecution{}, errors.New("group not found")
+		return models.TaskExecution{}, errors.New("team not found")
 	}
 
 	members, err := s.teamService.GetTeamMembers(team.ID)
 	if err != nil {
-		return models.TaskExecution{}, fmt.Errorf("error getting group members: %v", err)
+		return models.TaskExecution{}, fmt.Errorf("error getting team members: %v", err)
 	}
 	if len(members) == 0 {
-		return models.TaskExecution{}, errors.New("group has no members")
+		return models.TaskExecution{}, errors.New("team has no members")
 	}
 
 	taskMsg := fmt.Sprintf("وظیفه با اطلاعات زیر فعال شده است، اگر تمایل دارید که انجام دهید اعلام کنید.\n\nعنوان: %s\nتوضیحات: %s",
