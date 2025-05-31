@@ -5,6 +5,8 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 type Env struct {
@@ -19,6 +21,12 @@ type Env struct {
 }
 
 func NewEnv() Env {
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("Warning: .env file not found or failed to load")
+	}
+
 	timeLocation, _ := time.LoadLocation(os.Getenv("TIME_LOCATION"))
 	BotID, _ := strconv.ParseInt(os.Getenv("BOT_ID"), 10, 64)
 	HelpMessageID, _ := strconv.ParseInt(os.Getenv("HELP_MESSAGE_ID"), 10, 32)
