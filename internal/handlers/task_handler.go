@@ -318,20 +318,45 @@ func (h *TaskHandler) HandleCallbackQuery(bot *tgbotapi.BotAPI, update tgbotapi.
 		sendMessage(chatID, "وظیفه با موفقیت تکمیل شد.")
 		callbackMsg = "وظیفه تکمیل شد"
 
+		ownerID := taskExec.Task.Process.UserID
+		if ownerID != chatID {
+			sendMessage(ownerID, fmt.Sprintf(`
+				☑️ اعلان تکمیل وظیفه
+					- فرایند: %s
+					- شماره فرایند اجرایی: %s
+					- وظیفه: %s
+					- انجام دهنده: %s %s
+					- تاریخ: %s
+				`,
+				taskExec.Task.Process.Name,
+				taskExec.ProcessExecutionID,
+				taskExec.Task.Title,
+				taskExec.User.FirstName,
+				taskExec.User.LastName,
+				taskExec.CompletedAt))
+		}
+
 		if isFinal, _ := h.taskService.IsFinalTask(taskExec.TaskID); isFinal {
-			processExecution, procErr := h.processService.GetProcessExecutionByID(taskExec.ProcessExecutionID)
-			if procErr == nil && processExecution != nil {
-				processExecution.Status = models.ProcessExecutionStatusCompleted
-				completedTime := time.Now()
-				processExecution.CompletedAt = &completedTime
-				if errUpdate := h.processService.UpdateProcessExecution(processExecution); errUpdate != nil {
-					sendMessage(chatID, "خطا در بروزرسانی وضعیت نهایی فرایند.")
-					log.Printf("Error updating process execution status to completed: %v", errUpdate)
-				} else {
-					sendMessage(chatID, "فرایند والد نیز با موفقیت تکمیل شد.")
-				}
+			processExec, _ := h.processService.GetProcessExecutionByID(taskExec.ProcessExecutionID)
+			processExec.Status = models.ProcessExecutionStatusCompleted
+			completedTime := time.Now()
+			processExec.CompletedAt = &completedTime
+			if errUpdate := h.processService.UpdateProcessExecution(processExec); errUpdate != nil {
+				sendMessage(chatID, "خطا در بروزرسانی وضعیت نهایی فرایند.")
+				log.Printf("Error updating process execution status to completed: %v", errUpdate)
 			} else {
-				log.Printf("Could not retrieve parent process execution %d to mark as completed.", taskExec.ProcessExecutionID)
+				sendMessage(chatID, "فرایند والد نیز با موفقیت تکمیل شد.")
+				if ownerID != chatID {
+					sendMessage(ownerID, fmt.Sprintf(
+						`✅ اعلان تکمیل فرایند
+							- فرایند: %s
+							- شماره فرایند اجرایی: %s
+							- تاریخ: %s
+						`,
+						taskExec.Task.Process.Name,
+						taskExec.ProcessExecutionID,
+						processExec.CompletedAt))
+				}
 			}
 		}
 
