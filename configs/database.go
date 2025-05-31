@@ -18,8 +18,8 @@ func SetUpDatabaseConnection(env Env) *gorm.DB {
 
 	err = db.AutoMigrate(
 		&models.User{},
-		&models.Group{},
-		&models.UserGroups{},
+		&models.Team{},
+		&models.UserTeams{},
 		&models.Process{},
 		&models.ProcessBuilder{},
 		&models.Task{},

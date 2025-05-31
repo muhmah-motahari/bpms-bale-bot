@@ -7,30 +7,30 @@ import (
 )
 
 type (
-	GroupRepository interface {
-		Save(req models.Group) error
-		GetAll() ([]models.Group, error)
-		GetByJoinKey(joinKey string) (*models.Group, error)
+	TeamRepository interface {
+		Save(req models.Team) error
+		GetAll() ([]models.Team, error)
+		GetByJoinKey(joinKey string) (*models.Team, error)
 		GetMembers(groupID uint) ([]models.User, error)
-		GetByID(id uint) (*models.Group, error)
+		GetByID(id uint) (*models.Team, error)
 		AddMember(groupID uint, userID int64) error
 		RemoveMember(groupID uint, userID int64) error
-		SaveUserGroup(req models.UserGroups) error
-		GetGroupsByOwnerID(ownerID int64) ([]*models.Group, error)
+		SaveUserGroup(req models.UserTeams) error
+		GetGroupsByOwnerID(ownerID int64) ([]*models.Team, error)
 	}
 
-	groupRepository struct {
+	teamRepository struct {
 		db *gorm.DB
 	}
 )
 
-func NewGroupRepository(db *gorm.DB) GroupRepository {
-	return &groupRepository{
+func NewTeamRepository(db *gorm.DB) TeamRepository {
+	return &teamRepository{
 		db: db,
 	}
 }
 
-func (r *groupRepository) Save(req models.Group) error {
+func (r *teamRepository) Save(req models.Team) error {
 	if req.ID == 0 {
 		if err := r.db.Create(&req).Error; err != nil {
 			return err
@@ -44,23 +44,23 @@ func (r *groupRepository) Save(req models.Group) error {
 	return nil
 }
 
-func (r *groupRepository) GetAll() ([]models.Group, error) {
-	var groups []models.Group
-	if err := r.db.Find(&groups).Error; err != nil {
+func (r *teamRepository) GetAll() ([]models.Team, error) {
+	var teams []models.Team
+	if err := r.db.Find(&teams).Error; err != nil {
 		return nil, err
 	}
-	return groups, nil
+	return teams, nil
 }
 
-func (r *groupRepository) GetByJoinKey(joinKey string) (*models.Group, error) {
-	var group models.Group
-	if err := r.db.Where("join_key = ?", joinKey).First(&group).Error; err != nil {
+func (r *teamRepository) GetByJoinKey(joinKey string) (*models.Team, error) {
+	var team models.Team
+	if err := r.db.Where("join_key = ?", joinKey).First(&team).Error; err != nil {
 		return nil, err
 	}
-	return &group, nil
+	return &team, nil
 }
 
-func (r *groupRepository) GetMembers(groupID uint) ([]models.User, error) {
+func (r *teamRepository) GetMembers(groupID uint) ([]models.User, error) {
 	var users []models.User
 	err := r.db.Joins("JOIN user_groups ON user_groups.user_id = users.id").
 		Where("user_groups.group_id = ?", groupID).
@@ -68,34 +68,34 @@ func (r *groupRepository) GetMembers(groupID uint) ([]models.User, error) {
 	return users, err
 }
 
-func (r *groupRepository) GetByID(id uint) (*models.Group, error) {
-	var group models.Group
-	if err := r.db.First(&group, id).Error; err != nil {
+func (r *teamRepository) GetByID(id uint) (*models.Team, error) {
+	var team models.Team
+	if err := r.db.First(&team, id).Error; err != nil {
 		return nil, err
 	}
-	return &group, nil
+	return &team, nil
 }
 
-func (r *groupRepository) AddMember(groupID uint, userID int64) error {
-	userGroup := models.UserGroups{
-		UserID:  userID,
-		GroupID: groupID,
+func (r *teamRepository) AddMember(groupID uint, userID int64) error {
+	userGroup := models.UserTeams{
+		UserID: userID,
+		TeamID: groupID,
 	}
 	return r.db.Create(&userGroup).Error
 }
 
-func (r *groupRepository) RemoveMember(groupID uint, userID int64) error {
-	return r.db.Where("group_id = ? AND user_id = ?", groupID, userID).Delete(&models.UserGroups{}).Error
+func (r *teamRepository) RemoveMember(groupID uint, userID int64) error {
+	return r.db.Where("group_id = ? AND user_id = ?", groupID, userID).Delete(&models.UserTeams{}).Error
 }
 
-func (r *groupRepository) SaveUserGroup(req models.UserGroups) error {
+func (r *teamRepository) SaveUserGroup(req models.UserTeams) error {
 	return r.db.Create(&req).Error
 }
 
-func (r *groupRepository) GetGroupsByOwnerID(ownerID int64) ([]*models.Group, error) {
-	var groups []*models.Group
-	if err := r.db.Where("owner_id = ?", ownerID).Find(&groups).Error; err != nil {
+func (r *teamRepository) GetGroupsByOwnerID(ownerID int64) ([]*models.Team, error) {
+	var teams []*models.Team
+	if err := r.db.Where("owner_id = ?", ownerID).Find(&teams).Error; err != nil {
 		return nil, err
 	}
-	return groups, nil
+	return teams, nil
 }

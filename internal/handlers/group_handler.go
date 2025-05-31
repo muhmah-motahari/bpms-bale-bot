@@ -10,28 +10,28 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-// GroupHandler handles commands and callbacks related to groups.
-type GroupHandler struct {
-	groupService        service.GroupService
-	userService         service.UserService
-	groupBuilderService *service.GroupBuilderService
+// TeamHandler handles commands and callbacks related to teams.
+type TeamHandler struct {
+	teamService        service.TeamService
+	userService        service.UserService
+	teamBuilderService *service.TeamBuilderService
 }
 
-// NewGroupHandler creates a new GroupHandler.
-func NewGroupHandler(
-	groupService service.GroupService,
+// NewTeamHandler creates a new TeamHandler.
+func NewTeamHandler(
+	teamService service.TeamService,
 	userService service.UserService,
-	groupBuilderService *service.GroupBuilderService,
-) *GroupHandler {
-	return &GroupHandler{
-		groupService:        groupService,
-		userService:         userService,
-		groupBuilderService: groupBuilderService,
+	teamBuilderService *service.TeamBuilderService,
+) *TeamHandler {
+	return &TeamHandler{
+		teamService:        teamService,
+		userService:        userService,
+		teamBuilderService: teamBuilderService,
 	}
 }
 
-// HandleGroupCommands handles message-based commands for group management.
-func (h *GroupHandler) HandleGroupCommands(bot *tgbotapi.BotAPI, update tgbotapi.Update, sendMessage func(chatID int64, text string)) {
+// HandleTeamCommands handles message-based commands for team management.
+func (h *TeamHandler) HandleTeamCommands(bot *tgbotapi.BotAPI, update tgbotapi.Update, sendMessage func(chatID int64, text string)) {
 	if update.Message == nil {
 		return
 	}
@@ -39,103 +39,103 @@ func (h *GroupHandler) HandleGroupCommands(bot *tgbotapi.BotAPI, update tgbotapi
 	chatID := update.Message.Chat.ID
 
 	switch {
-	case update.Message.Text == "گروه جدید":
-		h.groupBuilderService.StartGroup(userID)
-		sendMessage(chatID, "لطفا نام گروه را وارد کنید")
+	case update.Message.Text == "تیم جدید":
+		h.teamBuilderService.StartTeam(userID)
+		sendMessage(chatID, "لطفا نام تیم را وارد کنید")
 		return
 
-	case update.Message.Text == "عضویت در گروه":
-		h.groupBuilderService.StartJoinGroup(userID)
-		sendMessage(chatID, "لطفا کد پیوستن به گروه را بفرستید")
+	case update.Message.Text == "عضویت در تیم":
+		h.teamBuilderService.StartJoinTeam(userID)
+		sendMessage(chatID, "لطفا کد پیوستن به تیم را بفرستید")
 		return
 
-	case update.Message.Text == "لیست گروه ها":
-		groups, err := h.groupService.GetGroupsByOwnerID(userID)
+	case update.Message.Text == "لیست تیم ها":
+		teams, err := h.teamService.GetTeamsByOwnerID(userID)
 		if err != nil {
-			sendMessage(chatID, "خطا در دریافت لیست گروه‌ها. لطفا دوباره تلاش کنید.")
+			sendMessage(chatID, "خطا در دریافت لیست تیم‌ها. لطفا دوباره تلاش کنید.")
 			return
 		}
 
-		if len(groups) == 0 {
-			sendMessage(chatID, "هیچ گروهی وجود ندارد.")
+		if len(teams) == 0 {
+			sendMessage(chatID, "هیچ تیمی وجود ندارد.")
 			return
 		}
 
 		var keyboard [][]tgbotapi.InlineKeyboardButton
-		for _, group := range groups {
+		for _, team := range teams {
 			row := []tgbotapi.InlineKeyboardButton{
-				tgbotapi.NewInlineKeyboardButtonData(group.Name, fmt.Sprintf("view_group_%d", group.ID)),
+				tgbotapi.NewInlineKeyboardButtonData(team.Name, fmt.Sprintf("view_team_%d", team.ID)),
 			}
 			keyboard = append(keyboard, row)
 		}
 
-		msg := tgbotapi.NewMessage(chatID, "لیست گروه‌ها:")
+		msg := tgbotapi.NewMessage(chatID, "لیست تیم‌ها:")
 		msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(keyboard...)
 		if _, errSend := bot.Send(msg); errSend != nil { // Keep bot.Send for specific inline keyboard
-			log.Printf("Error sending group list: %v", errSend)
+			log.Printf("Error sending team list: %v", errSend)
 		}
 		return
 
-	case strings.HasPrefix(update.Message.Text, "پیوستن به گروه:"):
-		joinKey := strings.TrimPrefix(update.Message.Text, "پیوستن به گروه:")
+	case strings.HasPrefix(update.Message.Text, "پیوستن به تیم:"):
+		joinKey := strings.TrimPrefix(update.Message.Text, "پیوستن به تیم:")
 		joinKey = strings.TrimSpace(joinKey)
 
-		if err := h.groupService.JoinGroup(userID, joinKey); err != nil {
-			sendMessage(chatID, "خطا در پیوستن به گروه. لطفا کلید پیوست را بررسی کنید یا مطمئن شوید قبلا عضو نشده‌اید: "+err.Error())
+		if err := h.teamService.JoinTeam(userID, joinKey); err != nil {
+			sendMessage(chatID, "خطا در پیوستن به تیم. لطفا کلید پیوست را بررسی کنید یا مطمئن شوید قبلا عضو نشده‌اید: "+err.Error())
 			return
 		}
-		sendMessage(chatID, "با موفقیت به گروه پیوستید!")
+		sendMessage(chatID, "با موفقیت به تیم پیوستید!")
 		return
 	}
 
-	// Check if user is in the middle of creating a group
-	builder, exists := h.groupBuilderService.GetBuilder(userID)
+	// Check if user is in the middle of creating a team
+	builder, exists := h.teamBuilderService.GetBuilder(userID)
 	if exists {
 		if builder.IsJoining {
-			// User is in the process of joining a group
-			if !h.groupBuilderService.SetName(userID, update.Message.Text) {
+			// User is in the process of joining a team
+			if !h.teamBuilderService.SetName(userID, update.Message.Text) {
 				sendMessage(chatID, "خطا در پردازش کد پیوستن.")
 				return
 			}
 
-			joinKey, success := h.groupBuilderService.CompleteJoinGroup(userID)
+			joinKey, success := h.teamBuilderService.CompleteJoinTeam(userID)
 			if !success {
-				sendMessage(chatID, "خطا در تکمیل فرآیند پیوستن به گروه.")
+				sendMessage(chatID, "خطا در تکمیل فرآیند پیوستن به تیم.")
 				return
 			}
 
-			if err := h.groupService.JoinGroup(userID, joinKey); err != nil {
-				sendMessage(chatID, "خطا در پیوستن به گروه. لطفا کد پیوست را بررسی کنید یا مطمئن شوید قبلا عضو نشده‌اید: "+err.Error())
+			if err := h.teamService.JoinTeam(userID, joinKey); err != nil {
+				sendMessage(chatID, "خطا در پیوستن به تیم. لطفا کد پیوست را بررسی کنید یا مطمئن شوید قبلا عضو نشده‌اید: "+err.Error())
 				return
 			}
-			sendMessage(chatID, "با موفقیت به گروه پیوستید!")
+			sendMessage(chatID, "با موفقیت به تیم پیوستید!")
 			return
 		} else {
-			// User is in the process of creating a group
-			if !h.groupBuilderService.SetName(userID, update.Message.Text) {
-				sendMessage(chatID, "خطا در تنظیم نام گروه.")
+			// User is in the process of creating a team
+			if !h.teamBuilderService.SetName(userID, update.Message.Text) {
+				sendMessage(chatID, "خطا در تنظیم نام تیم.")
 				return
 			}
 
-			group, success := h.groupBuilderService.CompleteGroup(userID)
+			team, success := h.teamBuilderService.CompleteTeam(userID)
 			if !success {
-				sendMessage(chatID, "خطا در تکمیل ایجاد گروه.")
+				sendMessage(chatID, "خطا در تکمیل ایجاد تیم.")
 				return
 			}
 
-			if err := h.groupService.CreateGroup(group); err != nil {
-				sendMessage(chatID, "خطا در ایجاد گروه. لطفا دوباره تلاش کنید.")
+			if err := h.teamService.CreateTeam(team); err != nil {
+				sendMessage(chatID, "خطا در ایجاد تیم. لطفا دوباره تلاش کنید.")
 				return
 			}
 
-			sendMessage(chatID, fmt.Sprintf("گروه با موفقیت ساخته شد!\nکلید عضویت به گروه %s\nافرادی که می‌خواهید در این گروه عضو شوند این پیام را برایشان ارسال کنید:\n\nجهت عضویت در گروه %s ، به بازو @bpmss پیام زیر را ارسال کنید:\nپیوستن به گروه: %s", group.Name, group.Name, group.JoinKey))
+			sendMessage(chatID, fmt.Sprintf("تیم با موفقیت ساخته شد!\nکلید عضویت به تیم %s\nافرادی که می‌خواهید در این تیم عضو شوند این پیام را برایشان ارسال کنید:\n\nجهت عضویت در تیم %s ، به بازو @bpmss پیام زیر را ارسال کنید:\nپیوستن به تیم: %s", team.Name, team.Name, team.JoinKey))
 			return
 		}
 	}
 }
 
-// HandleGroupCallback handles callback queries for group actions.
-func (h *GroupHandler) HandleGroupCallback(bot *tgbotapi.BotAPI, update tgbotapi.Update, sendMessage func(chatID int64, text string)) {
+// HandleTeamCallback handles callback queries for team actions.
+func (h *TeamHandler) HandleTeamCallback(bot *tgbotapi.BotAPI, update tgbotapi.Update, sendMessage func(chatID int64, text string)) {
 	if update.CallbackQuery == nil {
 		return
 	}
@@ -144,29 +144,29 @@ func (h *GroupHandler) HandleGroupCallback(bot *tgbotapi.BotAPI, update tgbotapi
 	chatID := update.CallbackQuery.Message.Chat.ID
 	callbackMsg := ""
 
-	if strings.HasPrefix(data, "view_group_") {
-		groupIDStr := strings.TrimPrefix(data, "view_group_")
-		groupID, err := strconv.ParseUint(groupIDStr, 10, 64)
+	if strings.HasPrefix(data, "view_team_") {
+		teamIDStr := strings.TrimPrefix(data, "view_team_")
+		teamID, err := strconv.ParseUint(teamIDStr, 10, 64)
 		if err != nil {
-			sendMessage(chatID, "خطا در پردازش شناسه گروه.")
+			sendMessage(chatID, "خطا در پردازش شناسه تیم.")
 			callbackMsg = "شناسه نامعتبر"
 		} else {
-			group, err := h.groupService.GetGroupByID(uint(groupID))
+			team, err := h.teamService.GetTeamByID(uint(teamID))
 			if err != nil {
-				sendMessage(chatID, "خطا در دریافت اطلاعات گروه.")
-				callbackMsg = "خطا در گروه"
+				sendMessage(chatID, "خطا در دریافت اطلاعات تیم.")
+				callbackMsg = "خطا در تیم"
 			} else {
-				members, err := h.groupService.GetGroupMembers(group.ID)
+				members, err := h.teamService.GetTeamMembers(team.ID)
 				if err != nil {
-					sendMessage(chatID, "خطا در دریافت اعضای گروه.")
+					sendMessage(chatID, "خطا در دریافت اعضای تیم.")
 					callbackMsg = "خطا در اعضا"
 				} else {
 					var membersList strings.Builder
-					membersList.WriteString(fmt.Sprintf("اطلاعات گروه %s:\n\n", group.Name))
-					membersList.WriteString(fmt.Sprintf("کلید پیوستن به گروه: %s\n\n", group.JoinKey))
-					membersList.WriteString("اعضای گروه:\n")
+					membersList.WriteString(fmt.Sprintf("اطلاعات تیم %s:\n\n", team.Name))
+					membersList.WriteString(fmt.Sprintf("کلید پیوستن به تیم: %s\n\n", team.JoinKey))
+					membersList.WriteString("اعضای تیم:\n")
 					if len(members) == 0 {
-						membersList.WriteString("(این گروه فعلا عضوی ندارد)\n")
+						membersList.WriteString("(این تیم فعلا عضوی ندارد)\n")
 					} else {
 						for i, member := range members {
 							membersList.WriteString(fmt.Sprintf("%d. %s %s (@%s)\n",
@@ -177,7 +177,7 @@ func (h *GroupHandler) HandleGroupCallback(bot *tgbotapi.BotAPI, update tgbotapi
 						}
 					}
 					sendMessage(chatID, membersList.String())
-					callbackMsg = "اطلاعات گروه نمایش داده شد"
+					callbackMsg = "اطلاعات تیم نمایش داده شد"
 				}
 			}
 		}

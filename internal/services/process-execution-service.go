@@ -20,7 +20,7 @@ type (
 	processExecutionService struct {
 		processRepo repository.ProcessRepository
 		taskRepo    repository.TaskRepository
-		groupRepo   repository.GroupRepository
+		groupRepo   repository.TeamRepository
 		// Map to store running processes and their current task
 		runningProcesses map[uint]*processExecution
 		mu               sync.RWMutex
@@ -36,7 +36,7 @@ type (
 func NewProcessExecutionService(
 	processRepo repository.ProcessRepository,
 	taskRepo repository.TaskRepository,
-	groupRepo repository.GroupRepository,
+	groupRepo repository.TeamRepository,
 ) ProcessExecutionService {
 	return &processExecutionService{
 		processRepo:      processRepo,

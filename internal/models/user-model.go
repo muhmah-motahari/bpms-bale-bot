@@ -12,14 +12,14 @@ type (
 		Username  string    `gorm:"type:varchar(100)" json:"username"`
 		FirstName string    `gorm:"type:varchar(100);column:firstname" json:"firstname"`
 		LastName  string    `gorm:"type:varchar(100);column:lastname" json:"lastname"`
-		Groups    []Group   `gorm:"many2many:user_groups;" json:"groups"`
+		Teams     []Team    `gorm:"many2many:user_teams;" json:"teams"`
 		CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
 		UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 	}
 
-	UserGroups struct {
+	UserTeams struct {
 		UserID    int64 `gorm:"primaryKey;type:bigint"`
-		GroupID   uint  `gorm:"primaryKey"`
+		TeamID    uint  `gorm:"primaryKey"`
 		CreatedAt time.Time
 		DeletedAt gorm.DeletedAt
 	}

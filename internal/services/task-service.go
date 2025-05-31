@@ -28,16 +28,16 @@ type (
 
 	taskService struct {
 		repo           repository.TaskRepository
-		groupService   GroupService
+		teamService    TeamService
 		processService ProcessService
 		bot            *tgbotapi.BotAPI
 	}
 )
 
-func NewTaskService(repo repository.TaskRepository, groupService GroupService, processService ProcessService, bot *tgbotapi.BotAPI) TaskService {
+func NewTaskService(repo repository.TaskRepository, teamService TeamService, processService ProcessService, bot *tgbotapi.BotAPI) TaskService {
 	return &taskService{
 		repo:           repo,
-		groupService:   groupService,
+		teamService:    teamService,
 		processService: processService,
 		bot:            bot,
 	}
@@ -207,19 +207,19 @@ func (s *taskService) StartTaskExecution(processExecutionID, taskID uint) (model
 		return models.TaskExecution{}, errors.New("task not found")
 	}
 
-	if task.GroupID == nil {
+	if task.TeamID == nil {
 		return models.TaskExecution{}, errors.New("task has no group assigned")
 	}
 
-	group, err := s.groupService.GetGroupByID(*task.GroupID)
+	team, err := s.teamService.GetTeamByID(*task.TeamID)
 	if err != nil {
 		return models.TaskExecution{}, fmt.Errorf("error getting group: %v", err)
 	}
-	if group == nil {
+	if team == nil {
 		return models.TaskExecution{}, errors.New("group not found")
 	}
 
-	members, err := s.groupService.GetGroupMembers(group.ID)
+	members, err := s.teamService.GetTeamMembers(team.ID)
 	if err != nil {
 		return models.TaskExecution{}, fmt.Errorf("error getting group members: %v", err)
 	}

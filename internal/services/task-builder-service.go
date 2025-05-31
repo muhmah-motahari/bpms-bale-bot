@@ -104,7 +104,7 @@ func (s *TaskBuilderService) SetGroup(userID int64, groupID uint) bool {
 	defer s.mu.Unlock()
 
 	if builder, exists := s.builders[userID]; exists && builder.CurrentStep == "group" {
-		builder.Task.GroupID = &groupID
+		builder.Task.TeamID = &groupID
 		builder.CurrentStep = "is_final"
 		return true
 	}

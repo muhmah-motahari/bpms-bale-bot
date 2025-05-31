@@ -13,8 +13,8 @@ type Task struct {
 	Description string    `gorm:"type:text" json:"description"`
 	ProcessID   uint      `gorm:"index" json:"process_id"`
 	Process     *Process  `json:"process"`
-	GroupID     *uint     `gorm:"index" json:"group_id"`
-	Group       *Group    `json:"group"`
+	TeamID      *uint     `gorm:"index" json:"team_id"`
+	Team        *Team     `json:"team"`
 	IsFinal     bool      `gorm:"default:false" json:"is_final"`
 	CreatedAt   time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt   time.Time `gorm:"autoUpdateTime" json:"updated_at"`
@@ -61,7 +61,7 @@ const (
 // TaskBuilder manages the state of task creation
 type TaskBuilder struct {
 	UserID               int64
-	CurrentStep          string // "process", "title", "description", "prerequisites", "group"
+	CurrentStep          string // "process", "title", "description", "prerequisites", "team"
 	ProcessID            uint
 	Task                 Task   `gorm:"-"` // GORM will ignore this field
 	Prerequisites        []uint // List of prerequisite task IDs

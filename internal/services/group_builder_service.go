@@ -5,43 +5,43 @@ import (
 	"sync"
 )
 
-// GroupBuilderService handles the group creation flow
-type GroupBuilderService struct {
-	builders map[int64]*GroupBuilder
+// TeamBuilderService handles the group creation flow
+type TeamBuilderService struct {
+	builders map[int64]*TeamBuilder
 	mu       sync.RWMutex
 }
 
-// GroupBuilder represents the state of a group being built
-type GroupBuilder struct {
+// TeamBuilder represents the state of a group being built
+type TeamBuilder struct {
 	Name      string
 	IsJoining bool // true if user is in the process of joining a group
 }
 
-// NewGroupBuilderService creates a new GroupBuilderService
-func NewGroupBuilderService() *GroupBuilderService {
-	return &GroupBuilderService{
-		builders: make(map[int64]*GroupBuilder),
+// NewTeamBuilderService creates a new TeamBuilderService
+func NewTeamBuilderService() *TeamBuilderService {
+	return &TeamBuilderService{
+		builders: make(map[int64]*TeamBuilder),
 	}
 }
 
-// StartGroup starts a new group creation process for a user
-func (s *GroupBuilderService) StartGroup(userID int64) {
+// StartTeam starts a new group creation process for a user
+func (s *TeamBuilderService) StartTeam(userID int64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.builders[userID] = &GroupBuilder{}
+	s.builders[userID] = &TeamBuilder{}
 }
 
-// StartJoinGroup starts the process of joining a group
-func (s *GroupBuilderService) StartJoinGroup(userID int64) {
+// StartJoinTeam starts the process of joining a group
+func (s *TeamBuilderService) StartJoinTeam(userID int64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.builders[userID] = &GroupBuilder{
+	s.builders[userID] = &TeamBuilder{
 		IsJoining: true,
 	}
 }
 
 // GetBuilder returns the builder for a user if it exists
-func (s *GroupBuilderService) GetBuilder(userID int64) (*GroupBuilder, bool) {
+func (s *TeamBuilderService) GetBuilder(userID int64) (*TeamBuilder, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	builder, exists := s.builders[userID]
@@ -49,7 +49,7 @@ func (s *GroupBuilderService) GetBuilder(userID int64) (*GroupBuilder, bool) {
 }
 
 // SetName sets the name for the group being built
-func (s *GroupBuilderService) SetName(userID int64, name string) bool {
+func (s *TeamBuilderService) SetName(userID int64, name string) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	builder, exists := s.builders[userID]
@@ -60,8 +60,8 @@ func (s *GroupBuilderService) SetName(userID int64, name string) bool {
 	return true
 }
 
-// CompleteGroup completes the group creation and returns the group
-func (s *GroupBuilderService) CompleteGroup(userID int64) (*models.Group, bool) {
+// CompleteTeam completes the group creation and returns the group
+func (s *TeamBuilderService) CompleteTeam(userID int64) (*models.Team, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	builder, exists := s.builders[userID]
@@ -69,17 +69,17 @@ func (s *GroupBuilderService) CompleteGroup(userID int64) (*models.Group, bool) 
 		return nil, false
 	}
 
-	group := &models.Group{
+	team := &models.Team{
 		Name:    builder.Name,
 		OwnerID: userID,
 	}
 
 	delete(s.builders, userID)
-	return group, true
+	return team, true
 }
 
-// CompleteJoinGroup completes the join group process and returns the join key
-func (s *GroupBuilderService) CompleteJoinGroup(userID int64) (string, bool) {
+// CompleteJoinTeam completes the join group process and returns the join key
+func (s *TeamBuilderService) CompleteJoinTeam(userID int64) (string, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	builder, exists := s.builders[userID]

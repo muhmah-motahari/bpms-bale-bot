@@ -9,52 +9,52 @@ import (
 	"math/rand"
 )
 
-type GroupService interface {
-	CreateGroup(group *models.Group) error
-	GetGroupByID(id uint) (*models.Group, error)
-	GetGroupMembers(groupID uint) ([]models.User, error)
-	AddMember(groupID uint, userID int64) error
-	RemoveMember(groupID uint, userID int64) error
+type TeamService interface {
+	CreateTeam(team *models.Team) error
+	GetTeamByID(id uint) (*models.Team, error)
+	GetTeamMembers(teamID uint) ([]models.User, error)
+	AddMember(teamID uint, userID int64) error
+	RemoveMember(teamID uint, userID int64) error
 	GenerateJoinKey() string
-	JoinGroup(userID int64, joinKey string) error
-	GetAllGroups() ([]models.Group, error)
-	GetGroupsByOwnerID(ownerID int64) ([]*models.Group, error)
+	JoinTeam(userID int64, joinKey string) error
+	GetAllTeams() ([]models.Team, error)
+	GetTeamsByOwnerID(ownerID int64) ([]*models.Team, error)
 }
 
-type groupService struct {
-	repo     repository.GroupRepository
+type teamService struct {
+	repo     repository.TeamRepository
 	userRepo repository.UserRepository
 }
 
-func NewGroupService(repo repository.GroupRepository, userRepo repository.UserRepository) GroupService {
-	return &groupService{repo: repo, userRepo: userRepo}
+func NewGroupService(repo repository.TeamRepository, userRepo repository.UserRepository) TeamService {
+	return &teamService{repo: repo, userRepo: userRepo}
 }
 
-func (s *groupService) CreateGroup(group *models.Group) error {
-	group.JoinKey = s.GenerateJoinKey()
-	return s.repo.Save(*group)
+func (s *teamService) CreateTeam(team *models.Team) error {
+	team.JoinKey = s.GenerateJoinKey()
+	return s.repo.Save(*team)
 }
 
-func (s *groupService) GetGroupByID(id uint) (*models.Group, error) {
+func (s *teamService) GetTeamByID(id uint) (*models.Team, error) {
 	if id == 0 {
-		return nil, errors.New("group ID is zero")
+		return nil, errors.New("team ID is zero")
 	}
 	return s.repo.GetByID(id)
 }
 
-func (s *groupService) GetGroupMembers(groupID uint) ([]models.User, error) {
-	return s.repo.GetMembers(groupID)
+func (s *teamService) GetTeamMembers(teamID uint) ([]models.User, error) {
+	return s.repo.GetMembers(teamID)
 }
 
-func (s *groupService) AddMember(groupID uint, userID int64) error {
-	return s.repo.AddMember(groupID, userID)
+func (s *teamService) AddMember(teamID uint, userID int64) error {
+	return s.repo.AddMember(teamID, userID)
 }
 
-func (s *groupService) RemoveMember(groupID uint, userID int64) error {
-	return s.repo.RemoveMember(groupID, userID)
+func (s *teamService) RemoveMember(teamID uint, userID int64) error {
+	return s.repo.RemoveMember(teamID, userID)
 }
 
-func (s *groupService) GenerateJoinKey() string {
+func (s *teamService) GenerateJoinKey() string {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	const length = 8
 
@@ -65,25 +65,25 @@ func (s *groupService) GenerateJoinKey() string {
 	return string(b)
 }
 
-func (s *groupService) JoinGroup(userID int64, joinKey string) error {
-	group, err := s.repo.GetByJoinKey(joinKey)
+func (s *teamService) JoinTeam(userID int64, joinKey string) error {
+	team, err := s.repo.GetByJoinKey(joinKey)
 	if err != nil {
 		return err
 	}
-	if group == nil {
+	if team == nil {
 		return errors.New("invalid join key")
 	}
-	return s.repo.AddMember(group.ID, userID)
+	return s.repo.AddMember(team.ID, userID)
 }
 
-func (g *groupService) AddToNewGroup(message dto.Message) {
-	// Save Group repository
-	group := models.Group{
+func (g *teamService) AddToNewTeam(message dto.Message) {
+	// Save Team repository
+	team := models.Team{
 		ID:      uint(message.Chat.ID),
 		Name:    message.Chat.Title,
 		JoinKey: g.GenerateJoinKey(),
 	}
-	err := g.repo.Save(group)
+	err := g.repo.Save(team)
 	if err != nil {
 		fmt.Println("Error: ", err)
 	}
@@ -102,9 +102,9 @@ func (g *groupService) AddToNewGroup(message dto.Message) {
 	}
 
 	// Save UserGroups
-	userGroup := models.UserGroups{
-		UserID:  user.ID,
-		GroupID: group.ID,
+	userGroup := models.UserTeams{
+		UserID: user.ID,
+		TeamID: team.ID,
 	}
 	err = g.repo.SaveUserGroup(userGroup)
 	if err != nil {
@@ -112,10 +112,10 @@ func (g *groupService) AddToNewGroup(message dto.Message) {
 	}
 }
 
-func (s *groupService) GetAllGroups() ([]models.Group, error) {
+func (s *teamService) GetAllTeams() ([]models.Team, error) {
 	return s.repo.GetAll()
 }
 
-func (s *groupService) GetGroupsByOwnerID(ownerID int64) ([]*models.Group, error) {
+func (s *teamService) GetTeamsByOwnerID(ownerID int64) ([]*models.Team, error) {
 	return s.repo.GetGroupsByOwnerID(ownerID)
 }

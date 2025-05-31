@@ -20,23 +20,23 @@ var (
 	processRepo repository.ProcessRepository = repository.NewProcessRepository(db)
 	taskRepo    repository.TaskRepository    = repository.NewTaskRepository(db)
 	userRepo    repository.UserRepository    = repository.NewUserRepository(db)
-	groupRepo   repository.GroupRepository   = repository.NewGroupRepository(db)
+	teamRepo    repository.TeamRepository    = repository.NewTeamRepository(db)
 
 	// Bot
 	bot *tgbotapi.BotAPI
 
 	// Services
 	userService             = service.NewUserService(userRepo)
-	groupService            = service.NewGroupService(groupRepo, userRepo)
+	teamService             = service.NewGroupService(teamRepo, userRepo)
 	processService          = service.NewProcessService(processRepo)
 	processBuilderService   = service.NewProcessBuilderService()
-	processExecutionService = service.NewProcessExecutionService(processRepo, taskRepo, groupRepo)
+	processExecutionService = service.NewProcessExecutionService(processRepo, taskRepo, teamRepo)
 	taskBuilderService      = service.NewTaskBuilderService()
 	taskService             service.TaskService
-	groupBuilderService     = service.NewGroupBuilderService()
+	teamBuilderService      = service.NewTeamBuilderService()
 
 	// Handlers
-	groupHandler   *handlers.GroupHandler
+	teamHandler    *handlers.TeamHandler
 	taskHandler    *handlers.TaskHandler
 	processHandler *handlers.ProcessHandler
 	helpHandler    *handlers.HelpHandler
@@ -45,8 +45,8 @@ var (
 
 var mainKeyboard = tgbotapi.NewReplyKeyboard(
 	tgbotapi.NewKeyboardButtonRow(tgbotapi.NewKeyboardButton("فرایند جدید"), tgbotapi.NewKeyboardButton("شروع فرایند"), tgbotapi.NewKeyboardButton("فرایند ها")),
-	tgbotapi.NewKeyboardButtonRow(tgbotapi.NewKeyboardButton("وظیفه جدید"), tgbotapi.NewKeyboardButton("وظایف من"), tgbotapi.NewKeyboardButton("لیست گروه ها")),
-	tgbotapi.NewKeyboardButtonRow(tgbotapi.NewKeyboardButton("گروه جدید"), tgbotapi.NewKeyboardButton("عضویت در گروه"), tgbotapi.NewKeyboardButton("راهنما")),
+	tgbotapi.NewKeyboardButtonRow(tgbotapi.NewKeyboardButton("وظیفه جدید"), tgbotapi.NewKeyboardButton("وظایف من"), tgbotapi.NewKeyboardButton("لیست تیم ها")),
+	tgbotapi.NewKeyboardButtonRow(tgbotapi.NewKeyboardButton("تیم جدید"), tgbotapi.NewKeyboardButton("عضویت در تیم"), tgbotapi.NewKeyboardButton("راهنما")),
 )
 
 func init() {
@@ -60,11 +60,11 @@ func init() {
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
 	// Initialize taskService with bot
-	taskService = service.NewTaskService(taskRepo, groupService, processService, bot)
+	taskService = service.NewTaskService(taskRepo, teamService, processService, bot)
 
 	// Initialize handlers
-	groupHandler = handlers.NewGroupHandler(groupService, userService, groupBuilderService)
-	taskHandler = handlers.NewTaskHandler(taskService, taskBuilderService, processService, groupService)
+	teamHandler = handlers.NewTeamHandler(teamService, userService, teamBuilderService)
+	taskHandler = handlers.NewTaskHandler(taskService, taskBuilderService, processService, teamService)
 	processHandler = handlers.NewProcessHandler(processService, processBuilderService, processExecutionService, taskService)
 	helpHandler = handlers.NewHelpHandler(env)
 	startHandler = handlers.NewStartHandler(&mainKeyboard)
@@ -106,7 +106,7 @@ func main() {
 			processHandler.HandleProcessExecution(bot, update, sendMessageWithKeyboard)
 			processHandler.HandleProcessCommands(bot, update, sendMessageWithKeyboard)
 			taskHandler.HandleTaskCreation(bot, update, sendMessageWithKeyboard)
-			groupHandler.HandleGroupCommands(bot, update, sendMessageWithKeyboard)
+			teamHandler.HandleTeamCommands(bot, update, sendMessageWithKeyboard)
 			helpHandler.HandleHelpCommand(bot, update, sendMessageWithKeyboard)
 
 		} else if update.CallbackQuery != nil {
@@ -122,7 +122,7 @@ func main() {
 			// Pass bot, update, and the sender function to callback handlers
 			processHandler.HandleProcessCallback(bot, update, sendCallbackMessageWithKeyboard)
 			taskHandler.HandleCallbackQuery(bot, update, sendCallbackMessageWithKeyboard)
-			groupHandler.HandleGroupCallback(bot, update, sendCallbackMessageWithKeyboard)
+			teamHandler.HandleTeamCallback(bot, update, sendCallbackMessageWithKeyboard)
 		}
 	}
 }

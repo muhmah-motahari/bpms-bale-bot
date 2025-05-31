@@ -16,20 +16,20 @@ type TaskHandler struct {
 	taskService        service.TaskService
 	taskBuilderService *service.TaskBuilderService
 	processService     service.ProcessService
-	groupService       service.GroupService
+	teamService        service.TeamService
 }
 
 func NewTaskHandler(
 	taskService service.TaskService,
 	taskBuilderService *service.TaskBuilderService,
 	processService service.ProcessService,
-	groupService service.GroupService,
+	teamService service.TeamService,
 ) *TaskHandler {
 	return &TaskHandler{
 		taskService:        taskService,
 		taskBuilderService: taskBuilderService,
 		processService:     processService,
-		groupService:       groupService,
+		teamService:        teamService,
 	}
 }
 
@@ -113,7 +113,7 @@ func (h *TaskHandler) HandleTaskCreation(bot *tgbotapi.BotAPI, update tgbotapi.U
 				sendMessage(chatID, "خطا در پردازش اتمام پیش‌نیازها.")
 				return
 			}
-			groups, err := h.groupService.GetGroupsByOwnerID(userID)
+			groups, err := h.teamService.GetTeamsByOwnerID(userID)
 			if err != nil || len(groups) == 0 {
 				sendMessage(chatID, "گروهی برای تخصیص وظیفه یافت نشد. لطفا ابتدا یک گروه ایجاد کنید.")
 				return
@@ -195,7 +195,7 @@ func (h *TaskHandler) HandleCallbackQuery(bot *tgbotapi.BotAPI, update tgbotapi.
 			callbackMsg = "خطا"
 			break
 		}
-		groups, err := h.groupService.GetAllGroups()
+		groups, err := h.teamService.GetAllTeams()
 		if err != nil || len(groups) == 0 {
 			sendMessage(chatID, "گروهی برای تخصیص وظیفه یافت نشد. لطفا ابتدا یک گروه ایجاد کنید.")
 			callbackMsg = "گروهی یافت نشد"
