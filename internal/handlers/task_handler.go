@@ -318,6 +318,9 @@ func (h *TaskHandler) HandleCallbackQuery(bot *tgbotapi.BotAPI, update tgbotapi.
 		sendMessage(chatID, "وظیفه با موفقیت تکمیل شد.")
 		callbackMsg = "وظیفه تکمیل شد"
 
+		fmt.Println("taskExec.Task: ", taskExec.Task)
+		fmt.Println("taskExec.Task.Process: ", taskExec.Task.Process)
+		fmt.Println("taskExec.Task.Process.UserID: ", taskExec.Task.Process.UserID)
 		ownerID := taskExec.Task.Process.UserID
 		if ownerID != chatID {
 			sendMessage(ownerID, fmt.Sprintf(`

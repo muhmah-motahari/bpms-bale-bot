@@ -107,7 +107,7 @@ func (r *taskRepository) GetTaskExecutionsByTaskID(taskID uint) ([]models.TaskEx
 
 func (r *taskRepository) GetTaskExecutionByID(taskExecutionID uint) (*models.TaskExecution, error) {
 	var taskExecution models.TaskExecution
-	if err := r.db.First(&taskExecution, taskExecutionID).Error; err != nil {
+	if err := r.db.Preload("Task.Process").Preload("User").First(&taskExecution, taskExecutionID).Error; err != nil {
 		return nil, err
 	}
 	return &taskExecution, nil
