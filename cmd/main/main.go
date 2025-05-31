@@ -66,7 +66,7 @@ func init() {
 	teamHandler = handlers.NewTeamHandler(teamService, userService, teamBuilderService)
 	taskHandler = handlers.NewTaskHandler(taskService, taskBuilderService, processService, teamService)
 	processHandler = handlers.NewProcessHandler(processService, processBuilderService, processExecutionService, taskService)
-	helpHandler = handlers.NewHelpHandler(env)
+	helpHandler = handlers.NewHelpHandler(env, &mainKeyboard)
 	startHandler = handlers.NewStartHandler(&mainKeyboard)
 }
 
