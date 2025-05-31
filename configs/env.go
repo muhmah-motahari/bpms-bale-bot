@@ -9,7 +9,6 @@ import (
 
 type Env struct {
 	AppEnv            string
-	BaleAPIAddress    string
 	TimeLocation      *time.Location
 	DSN               string
 	BotID             int64
@@ -31,7 +30,7 @@ func NewEnv() Env {
 		TimeLocation:      timeLocation,
 		DSN:               os.Getenv("DSN"),
 		BotID:             BotID,
-		Token:             os.Getenv("BALE_TOKEN"),
+		Token:             os.Getenv("TOKEN"),
 		HelpMessageID:     int(HelpMessageID),
 		HelpMessageChatID: HelpMessageChatID,
 	}

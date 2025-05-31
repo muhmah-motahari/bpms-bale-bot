@@ -22,7 +22,6 @@ func SetUpDatabaseConnection(env Env) *gorm.DB {
 		&models.UserGroups{},
 		&models.Process{},
 		&models.ProcessBuilder{},
-		&models.Notification{},
 		&models.Task{},
 		&models.TaskPrerequisite{},
 		&models.TaskDependency{},
