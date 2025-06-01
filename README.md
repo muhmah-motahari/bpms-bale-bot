@@ -13,7 +13,7 @@
    git clone https://github.com/muhmah-motahari/bpms-bale-bot.git
    cd bpms-bale-bot
    ```
-4. متغیرهای محیطی را تنظیم کنید:
+2. متغیرهای محیطی را تنظیم کنید:
    - با دستور زیر فایل کانفیگ نمونه را تغییر دهید:
      ```bash
      mv .env.example .env
@@ -21,7 +21,7 @@
    - سپس با ادیتور فایل `.env` را باز کرده و اطلاعات خودتان را وارد کنید.
 
 
-6. اجرا پروژه با Docker Compose:
+3. اجرا پروژه با Docker Compose:
    ```bash
    docker-compose up --build
    ```
