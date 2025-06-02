@@ -128,7 +128,7 @@ func (h *TeamHandler) HandleTeamCommands(bot *tgbotapi.BotAPI, update tgbotapi.U
 				return
 			}
 
-			sendMessage(chatID, fmt.Sprintf("تیم با موفقیت ساخته شد!\nکلید عضویت به تیم %s\nافرادی که می‌خواهید در این تیم عضو شوند این پیام را برایشان ارسال کنید:\n\nجهت عضویت در تیم %s ، به بازو @bpmss پیام زیر را ارسال کنید:\nپیوستن به تیم: %s", team.Name, team.Name, team.JoinKey))
+			sendMessage(chatID, fmt.Sprintf("تیم با موفقیت ساخته شد!\nکلید عضویت به تیم \"%s\"\nافرادی که می‌خواهید در این تیم عضو شوند این پیام را برایشان ارسال کنید:\n\nجهت عضویت در تیم \"%s\" ، به بازو @%s پیام \"عضویت در تیم\" را ارسال کنید و کلید زیر را وارد کنید:\n %s", team.Name, team.Name, bot.Self.UserName, team.JoinKey))
 			return
 		}
 	}
